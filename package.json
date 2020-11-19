@@ -1,0 +1,30 @@
+{
+  "name": "emscripten-build",
+  "version": "1.0.0",
+  "description": "Configure and build a C/C++ emscripten project.",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devappd/emscripten-build.git"
+  },
+  "author": "devappd",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/devappd/emscripten-build/issues"
+  },
+  "homepage": "https://github.com/devappd/emscripten-build#readme",
+  "dependencies": {
+    "emsdk-npm": "git+https://github.com/devappd/emsdk-npm.git",
+    "get-installed-path": "^4.0.8",
+    "shelljs": "^0.8.4",
+    "which": "^2.0.2"
+  },
+  "peerDependencies": {
+    "cmake-binaries": "git+https://github.com/devappd/cmake-binaries.git",
+    "ninja-binaries": "^1.10.1",
+    "msbuild": "^1.1.3"
+  }
+}
