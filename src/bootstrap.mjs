@@ -49,6 +49,11 @@ export default class Bootstrap {
     return this;
   }
 
+  async make(target, options) {
+    // Alias for build. Subclasses should not implement this.
+    return this.build(target, options);
+  }
+
   // Subclasses should not need to implement this, but may do
   // so for special handling.
   async clean(cleanDirs) {

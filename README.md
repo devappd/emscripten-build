@@ -53,7 +53,7 @@ See examples below.
 2. Call one of these methods on the bootstrap.
     
     * `bootstrap.configure()`
-    * `bootstrap.build()`
+    * `bootstrap.build()` or `bootstrap.make()`
     * `bootstrap.clean()`
     * `bootstrap.reconfigure()`
     * `bootstrap.rebuild()`
@@ -174,7 +174,7 @@ All parameters are optional.
 * `bootstrap.configure(options)` -- Configure the project.
     * `options` -- Array of command line arguments for the `configure` step. Defaults to the `options` that you set during instantiation.
 
-* `bootstrap.build(target, options)`, `bootstrap.build(options)` -- Build the project (will configure first if required). 
+* `bootstrap.build(target, options)`, `bootstrap.build(options)` -- Build the project (will configure first if required). You may also use `bootstrap.make()` as an alias.
     * `target` -- Make build target, e.g., `install`. Defaults to no specified target.
     * `makeOptions` -- Array of command line arguments for the `make` step. Defaults to no arguments.
 
