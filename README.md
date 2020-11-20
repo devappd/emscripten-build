@@ -15,25 +15,28 @@ You may also install this package globally.
 Installing this package will also install the [Emscripten SDK](https://github.com/marcolovescode/emsdk-npm)
 into your node modules.
 
+This package also installs the below optional dependencies. Consider
+installing these yourself as global packages.
+
 If your C/C++ project uses CMake and you don't already have it on your system,
 then also install [cmake-binaries](https://github.com/marcolovescode/cmake-binaries).
 
 ```sh
-npm install --save-dev git+https://github.com/marcolovescode/cmake-binaries.git
+npm install -g git+https://github.com/marcolovescode/cmake-binaries.git
 ```
 
 If you want to use Ninja under CMake and you don't already have it, then install
 [ninja-binaries](https://github.com/Banno/ninja-binaries).
 
 ```sh
-npm install --save-dev ninja-binaries
+npm install -g ninja-binaries
 ```
 
 If you want to use MSBuild (Visual Studio) under CMake, then install
 [msbuild](https://github.com/jhaker/nodejs-msbuild). You'll also need to have Visual Studio installed on your system.
 
 ```sh
-npm install --save-dev msbuild
+npm install -g msbuild
 ```
 
 Usage of `make`, `configure`, `mingw32-make`, and any other build toolset, will
