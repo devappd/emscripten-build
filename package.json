@@ -4,7 +4,11 @@
   "description": "Configure and build a C/C++ emscripten project.",
   "main": "./src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "node ./scripts/postinstall.js"
+  },
+  "bin": {
+    "emscripten": "./bin/emscripten.mjs"
   },
   "repository": {
     "type": "git",
@@ -17,12 +21,13 @@
   },
   "homepage": "https://github.com/devappd/emscripten-build-npm#readme",
   "dependencies": {
+    "@zkochan/npm-conf": "^2.0.1",
     "emsdk-npm": "git+https://github.com/devappd/emsdk-npm.git",
     "get-installed-path": "^4.0.8",
     "shelljs": "^0.8.4",
     "which": "^2.0.2"
   },
-  "peerDependencies": {
+  "optionalDependencies": {
     "cmake-binaries": "git+https://github.com/devappd/cmake-binaries.git",
     "ninja-binaries": "^1.10.1",
     "msbuild": "^1.1.3"
