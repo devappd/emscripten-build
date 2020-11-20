@@ -42,7 +42,8 @@ in your PATH.
 
 ## Usage
 
-See examples below.
+See examples below. Note that this package is an ECMAScript module. If you wish to use it from CommonJS,
+you will need to call `await import()` instead of `require()`.
 
 1. Instantiate a JS bootstrap using one of the below constructors. Instantiating a bootstrap does not commit any actions on your source files.
 
@@ -73,14 +74,16 @@ Note that you need to specify the generator as part of your `options` arguments.
     * Same as above, but `cacheDir` defaults to a subdirectory `build/` of the main module you are running.
 
 ```js
-const emscripten = require('emscripten-build');
+async function ...() {
+    const emscripten = await import('emscripten-build');
 
-let bootstrap = emscripten.cmake('path/to/dir/with/CMakeLists', 'path/to/build/dir', [
-    '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCUSTOM=VAL', /*...*/
-])
+    let bootstrap = emscripten.cmake('path/to/dir/with/CMakeLists', 'path/to/build/dir', [
+        '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCUSTOM=VAL', /*...*/
+    ])
 
-bootstrap.configure()
-    .then(bs => bs.build());
+    return bootstrap.configure()
+        .then(bs => bs.build());
+}
 
 // Or, you can call bootstrap.build() by itself.
 // Your build will be configured automatically, but any changes
@@ -101,14 +104,16 @@ Note that the `options` parameter applies to the `make` step instead of the `con
     * Same as above, but `cleanDirs` will be empty. The `clean()` method will have no effect and emit a warning.
 
 ```js
-const emscripten = require('emscripten-build');
+async function ...() {
+    const emscripten = await import('emscripten-build');
 
-let bootstrap = emscripten.make('path/to/dir/with/Makefile', [
-    '-FLAGS', '-DDEFINE1=value1', '-DDEFINE2=value2'
-])
+    let bootstrap = emscripten.make('path/to/dir/with/Makefile', [
+        '-FLAGS', '-DDEFINE1=value1', '-DDEFINE2=value2'
+    ])
 
-bootstrap.build('target')
-    .then(bs => { /* ... */ });
+    return bootstrap.build('target')
+        .then(bs => { /* ... */ });
+}
 ```
 
 ## Configure
@@ -124,12 +129,17 @@ bootstrap.build('target')
     * Same as above, but `cleanDirs` will be empty. The `clean()` method will have no effect and emit a warning.
 
 ```js
-let bootstrap = emscripten.configure('path/to/dir/with/configure', [
-    '-FLAGS', '-DEFINE1=value1', '-DEFINE2=value2'
-])
+async function ...() {
+    const emscripten = await import('emscripten-build');
 
-bootstrap.configure()
-    .then(bs => bs.build('target'));
+    let bootstrap = emscripten.configure('path/to/dir/with/configure', [
+        '-FLAGS', '-DEFINE1=value1', '-DEFINE2=value2'
+    ])
+
+    return bootstrap.configure()
+        .then(bs => bs.build('target'));
+}
+
 
 // Or, you can call bootstrap.build() by itself.
 // Your build will be configured automatically, but any changes
@@ -142,29 +152,32 @@ With `run()`, you can run any command inside the EMSDK environment. When you cal
 method, it executes immediately. It does not return a bootstrap.
 
 ```js
-const emscripten = require('emscripten-build');
+async function ...() {
+    const emscripten = await import('emscripten-build');
 
-emscripten.run('command',
-    ['args1','args2','args3', /*...*/],
-    { /* child_process.spawn options, e.g., cwd */ }
-)
-    .then(_ => { /*...*/ })
+    return emscripten.run('command',
+        ['args1','args2','args3', /*...*/],
+        { /* child_process.spawn options, e.g., cwd */ }
+    )
+        .then(_ => { /*...*/ })
+}
 ```
 
 You can also invoke `run()` on an existing bootstrap. In this case, it can be chained
 with other bootstrap calls.
 
 ```js
-const emscripten = require('emscripten-build');
+async function ...() {
+    const emscripten = await import('emscripten-build');
 
-let bootstrap = emscripten.make(/*...*/);
+    let bootstrap = emscripten.make(/*...*/);
 
-
-bootstrap.run('command', 
-    ['args1', 'args2', 'args3', /*...*/],
-    { /* child_process.spawn options, e.g., cwd */ }
-)
-    .then(bs => { /* ... */ });
+    return bootstrap.run('command', 
+        ['args1', 'args2', 'args3', /*...*/],
+        { /* child_process.spawn options, e.g., cwd */ }
+    )
+        .then(bs => { /* ... */ });
+}
 ```
 
 ## Bootstrap Methods
