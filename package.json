@@ -6,6 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": {
+    "emscripten": "./bin/emscripten.mjs"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/marcolovescode/emscripten-build-npm.git"

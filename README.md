@@ -40,7 +40,17 @@ Usage of `make`, `configure`, `mingw32-make`, and any other build toolset, will
 require you to install those systems by yourself. Have those commands available
 in your PATH.
 
-## Usage
+## Command Line Usage
+
+You may run an arbitrary command under the EMSDK environment:
+
+```sh
+emscripten run <command> [args...]
+```
+
+Build commands such as `make`, `cmake`, and `configure`, are not yet implemented. See [issue #7](https://github.com/marcolovescode/emscripten-build-npm/issues/7).
+
+## Node.js Usage
 
 See examples below. Note that this package is an ECMAScript module. If you wish to use it from CommonJS,
 you will need to call `await import()` instead of `require()`.
