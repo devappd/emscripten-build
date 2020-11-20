@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/devappd/emscripten-build.git"
+    "url": "git+https://github.com/devappd/emscripten-build-npm.git"
   },
   "author": "devappd",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/devappd/emscripten-build/issues"
+    "url": "https://github.com/devappd/emscripten-build-npm/issues"
   },
-  "homepage": "https://github.com/devappd/emscripten-build#readme",
+  "homepage": "https://github.com/devappd/emscripten-build-npm#readme",
   "dependencies": {
     "emsdk-npm": "git+https://github.com/devappd/emsdk-npm.git",
     "get-installed-path": "^4.0.8",
