@@ -2,7 +2,7 @@
 
 Configure and build a C/C++ project with Emscripten by using node.js.
 
-***This package is experimental!***
+***This package is experimental! API changes are expected!***
 
 ## Installation
 
