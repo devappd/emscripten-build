@@ -42,7 +42,7 @@ in your PATH.
 
 ## Usage
 
-The Promise flow of building a C/C++ project is as follows:
+See examples below.
 
 1. Instantiate a JS bootstrap using one of the below constructors. Instantiating a bootstrap does not commit any actions on your source files.
 
@@ -75,10 +75,16 @@ Note that you need to specify the generator as part of your `options` arguments.
 ```js
 const emscripten = require('emscripten-build');
 
-emscripten.cmake('path/to/dir/with/CMakeLists', 'path/to/build/dir', [
+let bootstrap = emscripten.cmake('path/to/dir/with/CMakeLists', 'path/to/build/dir', [
     '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCUSTOM=VAL', /*...*/
 ])
-.then(bootstrap => bootstrap.build());
+
+bootstrap.configure()
+    .then(bs => bs.build());
+
+// Or, you can call bootstrap.build() by itself.
+// Your build will be configured automatically, but any changes
+// to your options will not be reflected unless you configure() or clean().
 ```
 
 ## Makefile
@@ -97,15 +103,12 @@ Note that the `options` parameter applies to the `make` step instead of the `con
 ```js
 const emscripten = require('emscripten-build');
 
-emscripten.make('path/to/dir/with/Makefile', [
-    '-FLAGS', '-DEFINE1=value1', '-DEFINE2=value2',
-    '-FLAGS', '-DEFINE1=value1', '-DEFINE2=value2'
+let bootstrap = emscripten.make('path/to/dir/with/Makefile', [
+    '-FLAGS', '-DDEFINE1=value1', '-DDEFINE2=value2'
 ])
-.then(bootstrap => bootstrap.build('target'));
-```
 
-```js
-const emscripten = require('emscripten-build');
+bootstrap.build('target')
+    .then(bs => { /* ... */ });
 ```
 
 ## Configure
@@ -121,10 +124,16 @@ const emscripten = require('emscripten-build');
     * Same as above, but `cleanDirs` will be empty. The `clean()` method will have no effect and emit a warning.
 
 ```js
-emscripten.configure('path/to/dir/with/configure', [
+let bootstrap = emscripten.configure('path/to/dir/with/configure', [
     '-FLAGS', '-DEFINE1=value1', '-DEFINE2=value2'
 ])
-.then(bootstrap => bootstrap.build('target'));
+
+bootstrap.configure()
+    .then(bs => bs.build('target'));
+
+// Or, you can call bootstrap.build() by itself.
+// Your build will be configured automatically, but any changes
+// to your options will not be reflected unless you configure() or clean().
 ```
 
 ## Custom Command
@@ -139,7 +148,7 @@ emscripten.run('command',
     ['args1','args2','args3', /*...*/],
     { /* child_process.spawn options, e.g., cwd */ }
 )
-.then(_ => { /*...*/ })
+    .then(_ => { /*...*/ })
 ```
 
 You can also invoke `run()` on an existing bootstrap. In this case, it can be chained
@@ -148,11 +157,14 @@ with other bootstrap calls.
 ```js
 const emscripten = require('emscripten-build');
 
-emscripten.make(/*...*/)
-.then(bootstrap => bootstrap.run('command', 
+let bootstrap = emscripten.make(/*...*/);
+
+
+bootstrap.run('command', 
     ['args1', 'args2', 'args3', /*...*/],
     { /* child_process.spawn options, e.g., cwd */ }
-));
+)
+    .then(bs => { /* ... */ });
 ```
 
 ## Bootstrap Methods
