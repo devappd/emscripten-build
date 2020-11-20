@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/marcolovescode/emscripten-build.git"
+    "url": "git+https://github.com/marcolovescode/emscripten-build-npm.git"
   },
   "author": "Marco Zafra",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/marcolovescode/emscripten-build/issues"
+    "url": "https://github.com/marcolovescode/emscripten-build-npm/issues"
   },
-  "homepage": "https://github.com/marcolovescode/emscripten-build#readme",
+  "homepage": "https://github.com/marcolovescode/emscripten-build-npm#readme",
   "dependencies": {
     "emsdk-npm": "git+https://github.com/marcolovescode/emsdk-npm.git",
     "get-installed-path": "^4.0.8",
