@@ -2,7 +2,7 @@
 
 Configure and build a C/C++ project with Emscripten by using node.js.
 
-***This package is experimental! API changes are expected!***
+***This package is experimental! API changes are expected (see [issue #11](https://github.com/marcolovescode/emscripten-build-npm/issues/11))!***
 
 ## Installation
 
@@ -15,9 +15,9 @@ You may also install this package globally.
 Installing this package will also install the [Emscripten SDK](https://github.com/marcolovescode/emsdk-npm)
 into your node modules.
 
-The `--emsdk` switch allows you to specify your own install path for `emsdk`. This path is saved to your `npmrc` user config. 
+The `--emsdk` switch allows you to specify your own install path for EMSDK. This path is saved to your `npmrc` user config. 
 
-If the path is not specified, `emsdk` will be installed into your `node_modules`. The package warns you of this case. You should specify one to save disk space across modules. In addition, if the install path is too long, `emsdk` installation will fail.
+If the path is not specified, this package will warn you that EMSDK will be installed into your `node_modules`. You should specify a path to save disk space across duplicate modules. In addition, if the install path is too long, this package will warn you that EMSDK installation will fail.
 
 You may also specify an install path as follows:
 
