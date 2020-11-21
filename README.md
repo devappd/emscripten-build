@@ -2,6 +2,8 @@
 
 Configure and build a C/C++ project with Emscripten by using node.js.
 
+See example usage of this toolset in [emscripten-npm-examples](https://github.com/marcolovescode/emscripten-npm-examples).
+
 ***This package is experimental! API changes are expected (see [issue #11](https://github.com/marcolovescode/emscripten-build-npm/issues/11))!***
 
 ## Installation
