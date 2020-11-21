@@ -7,7 +7,7 @@ Configure and build a C/C++ project with Emscripten by using node.js.
 ## Installation
 
 ```sh
-npm install --save-dev git+https://github.com/marcolovescode/emscripten-build-npm.git
+npm install --emsdk='/your/install/path' --save-dev git+https://github.com/marcolovescode/emscripten-build-npm.git
 ```
 
 You may also install this package globally.
@@ -15,29 +15,24 @@ You may also install this package globally.
 Installing this package will also install the [Emscripten SDK](https://github.com/marcolovescode/emsdk-npm)
 into your node modules.
 
-This package also installs the below optional dependencies. Consider
-installing these yourself as global packages.
+The `--emsdk` switch allows you to specify your own install path for `emsdk`. This path is saved to your `npmrc` user config. 
 
-If your C/C++ project uses CMake and you don't already have it on your system,
-then also install [cmake-binaries](https://github.com/marcolovescode/cmake-binaries).
+If the path is not specified, `emsdk` will be installed into your `node_modules`. The package warns you of this case. You should specify one to save disk space across modules. In addition, if the install path is too long, `emsdk` installation will fail.
 
-```sh
-npm install -g git+https://github.com/marcolovescode/cmake-binaries.git
-```
-
-If you want to use Ninja under CMake and you don't already have it, then install
-[ninja-binaries](https://github.com/Banno/ninja-binaries).
+You may also specify an install path as follows:
 
 ```sh
-npm install -g ninja-binaries
+npm config set emsdk "/your/install/path"
 ```
 
-If you want to use MSBuild (Visual Studio) under CMake, then install
-[msbuild](https://github.com/jhaker/nodejs-msbuild). You'll also need to have Visual Studio installed on your system.
+This package also installs these dependencies:
 
-```sh
-npm install -g msbuild
-```
+* [cmake-binaries](https://github.com/marcolovescode/cmake-binaries) -- Locates CMake on your system
+or installs it into your `node_modules`.
+* [ninja-binaries](https://github.com/Banno/ninja-binaries) -- Locates ninja on your system
+or installs it into your `node_modules`.
+* [msbuild](https://github.com/jhaker/nodejs-msbuild) -- Locates MSBuild (Visual Studio) on your
+system. You'll need to have Visual Studio installed on your system.
 
 Usage of `make`, `configure`, `mingw32-make`, and any other build toolset, will
 require you to install those systems by yourself. Have those commands available
