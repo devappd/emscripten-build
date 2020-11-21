@@ -5,12 +5,8 @@ import shell from 'shelljs';
 import fs from 'fs';
 
 export default class Bootstrap {
-  constructor(configDir, makeDir, cleanDirs, options) {
-    this.configDir = path.resolve(configDir);
-    this.makeDir = path.resolve(makeDir);
-    // validation is done in clean().
-    this.cleanDirs = cleanDirs;
-    this.options = options;
+  constructor(workingConfig) {
+    this.config = workingConfig;
 
     this.configCommand = null;
     this.configSubCommand = null;
@@ -19,51 +15,32 @@ export default class Bootstrap {
     this.makeSubCommand = null;
   }
 
-  _processOptions(options) {
-    options = options || this.options;
+////////////////////////////////////////////////////////////////////////
+// Config validation
+////////////////////////////////////////////////////////////////////////
 
-    if (options instanceof Array)
-      return options;
-    throw new TypeError('Options for this class must be an array of command args.');
+  _validateEmsdkConfig() {
+    if (!('emsdkVersion' in this.config)
+        || !this.config.emsdkVersion)
+      this.config.emsdkVersion = 'latest';
   }
 
-  async __preCommand() {
-    await Activate();
+////////////////////////////////////////////////////////////////////////
+// Implementations
+////////////////////////////////////////////////////////////////////////
+
+  async _configure() {
+    throw new Error('Bootstrap::_configure() not implemented by the subclass.')
   }
 
-  async _bindCommand(ctx, impl, ...args) {
-    await this.__preCommand();
-    await impl.call(ctx, ...args);
-    return ctx;
+  async _build() {
+    throw new Error('Bootstrap::_build() not implemented by the subclass.')
   }
 
-  async configure(options) {
-    // Implemented by child class
-    console.warn(configure.name + ' is not implemented in this class.');
-    return this;
-  }
+  async _clean() {
+    let cleanDirs = [...this.config.clean.paths];
 
-  async build(target, options) {
-    // Implemented by child class
-    console.warn(build.name + ' is not implemented in this class.');
-    return this;
-  }
-
-  async make(target, options) {
-    // Alias for build. Subclasses should not implement this.
-    return this.build(target, options);
-  }
-
-  // Subclasses should not need to implement this, but may do
-  // so for special handling.
-  async clean(cleanDirs) {
-    if (!cleanDirs)
-      cleanDirs = this.cleanDirs;
-
-    if (typeof cleanDirs === 'string')
-      cleanDirs = [cleanDirs];
-
-    if (!(cleanDirs instanceof Array) || cleanDirs.length < 1) {
+    if (cleanDirs.length < 1) {
       console.warn('bootstrap::clean() has no paths to clean up. Your build will not be cleaned!');
       return this;
     }
@@ -91,22 +68,90 @@ export default class Bootstrap {
     return this;
   }
 
-  async reconfigure(options) {
-    // Implemented by child class
-    console.warn(reconfigure.name + ' is not implemented in this class.');
+  async _reconfigure() {
+    await this._clean();
+    await this._configure();
+  }
+
+  async _rebuild() {
+    await this._clean();
+    await this._build();
+  }
+
+  async _compile() {
+    try {
+      await this._build();
+    }
+    catch (e) {
+      console.log("Build has been failed, trying to do a full rebuild.");
+      await this._rebuild();
+    }
+  }
+
+////////////////////////////////////////////////////////////////////////
+// Binding Helpers
+////////////////////////////////////////////////////////////////////////
+
+  async __preCommand() {
+    // emsdkVersion defaults to 'latest' and is guaranteed to be
+    // in this.config
+    await Activate(this.config.emsdkVersion);
+  }
+
+  async _bindCommand(impl, ...args) {
+    await this.__preCommand();
+    await impl.call(this, ...args);
     return this;
   }
 
-  async rebuild(target, makeOptions) {
-    // Implemented by child class
-    console.warn(rebuild.name + ' is not implemented in this class.');
-    return this;
+  async _bindConfigCommand(impl, ...args) {
+    throw new Error("Bootstrap::_bindConfigCommand not implemented by the subclass!")
   }
 
-  async compile(target, makeOptions) {
-    // Implemented by child class
-    console.warn(compile.name + ' is not implemented in this class.');
-    return this;
+  async _bindMakeCommand(impl, ...args) {
+    throw new Error("Bootstrap::_bindMakeCommand not implemented by the subclass!")
+  }
+
+  async _bindConfigMakeCommand(impl, ...args) {
+    throw new Error("Bootstrap::_bindConfigMakeCommand not implemented by the subclass!")
+  }
+
+////////////////////////////////////////////////////////////////////////
+// Bindings
+////////////////////////////////////////////////////////////////////////
+
+  // Must be implemented by subclass
+  async configure() {
+    return this._bindConfigCommand(this._configure);
+  }
+
+  // Must be implemented by subclass
+  async build() {
+    return this._bindMakeCommand(this._build);
+  }
+
+  // Alias for build. Subclasses should not implement this.
+  async make() {
+    return this.build();
+  }
+
+  // Subclasses should not need to implement this, but may do
+  // so for special handling.
+  async clean() {
+    return this._clean();
+  }
+
+  // Subclasses should not define these meta-commands.
+  async reconfigure() {
+    return this._bindConfigCommand(this._reconfigure);
+  }
+
+  async rebuild() {
+    return this._bindConfigMakeCommand(this._rebuild);
+  }
+
+  async compile() {
+    return this._bindConfigMakeCommand(this._compile);
   }
 
   // Special command available to all bootstrap chains.

@@ -3,20 +3,106 @@ import CMake from './cmake.mjs';
 import Make from './make.mjs';
 import Configure from './configure.mjs';
 import emsdk from 'emsdk-npm';
+import { GetWorkingConfig } from './config.mjs';
 
-export function cmake(configDir, cacheDir, options = null) {
-    return new CMake(configDir, cacheDir, options);
+async function _callAction(actionName, a, b) {
+  let workingConfig = GetWorkingConfig(a, b);
+
+  let bootstrap;
+  switch (workingConfig.type.toLowerCase()) {
+    case 'make':
+      bootstrap = new Make(workingConfig);
+      break;
+    
+    case 'configure':
+      bootstrap = new Configure(workingConfig);
+      break;
+    
+    case 'cmake':
+      bootstrap = new CMake(workingConfig);
+      break;
+  }
+
+  return bootstrap[actionName]();
 }
 
-export function make(makeDir, cleanDirs, options = null) {
-    return new Make(makeDir, cleanDirs, options);
+/**
+ * Configure the C/C++ project with a given config.
+ * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ */
+export async function configure(a, b) {
+  return _callAction('configure', a, b);
 }
 
-export function configure(configDir, makeDir, cleanDirs = null, options = null) {
-    return new Configure(configDir, makeDir, cleanDirs, options);
+/**
+ * Build the C/C++ project with a given config. Also configure the project if necessary.
+ * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ */
+export async function build(a, b) {
+  return _callAction('build', a, b);
 }
 
+/**
+ * Clean the C/C++ project with a given config.
+ * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ */
+export async function clean(a, b) {
+  return _callAction('clean', a, b);
+}
+
+/**
+ * Clean then configure the C/C++ project with a given config.
+ * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ */
+export async function reconfigure(a, b) {
+  return _callAction('reconfigure', a, b);
+}
+
+/**
+ * Clean, configure, then build the C/C++ project with a given config.
+ * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ */
+export async function rebuild(a, b) {
+  return _callAction('rebuild', a, b);
+}
+
+/**
+ * Build the C/C++ project with a given config. If the build fails, then clean, configure, and rebuild.
+ * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ */
+export async function compile(a, b) {
+  return _callAction('compile', a, b);
+}
+
+/**
+ * Install the given EMSDK version from the given config.
+ * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ */
+export async function install(a, b) {
+  throw new Error('emscripten-build::install() is not yet implemented.');
+
+  // let workingConfig = GetWorkingConfig(a, b);
+  
+  // if (workingConfig) {
+  //   // Do emsdk and emsdkVersion exist in this object?
+  //   // Retrieve defaults then Activate(version, path)
+  // }
+}
+
+/**
+ * Run an arbitrary command within the EMSDK environment.
+ * @param {string} command - The name of a sub-config to use from the base config.
+ * @param {string[]} [args=[]] - Command line arguments
+ * @param {object} [opts=[]] - Options to pass to child_process.spawn()
+ */
 export async function run(command, args = [], opts = {}) {
-    await Activate();
-    return emsdk.run(command, args, opts);
+  await Activate();
+  return emsdk.run(command, args, opts);
 }

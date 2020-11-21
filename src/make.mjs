@@ -3,102 +3,92 @@ import emsdk from 'emsdk-npm';
 import { checkMakeInstalled, makeCommand } from './environment.mjs';
 
 export default class Make extends Bootstrap {
-  constructor(makeDir, cleanDirs, options = null) {
-    // two-args: (makeDir, options)
-    if (options === null) {
-      options = cleanDirs;
-      cleanDirs = null;
-    } 
-
-    super(makeDir, makeDir, cleanDirs, options);
+  constructor(workingConfig) {
+    super(workingConfig);
 
     this.makeCommand = 'emmake';
     this.makeSubCommand = makeCommand;
+
+    this.__validateConfig();
   }
 
-  async __bindCommand(ctx, impl, ...args) {
-    // Throws error if Make is not installed.
-    await checkMakeInstalled();
-    this.makeSubCommand = makeCommand;
-    return super._bindCommand(ctx, impl, ...args);
+////////////////////////////////////////////////////////////////////////
+// Config validation
+////////////////////////////////////////////////////////////////////////
+
+  __validateConfig() {
+    this.__validateBuildConfig();
+    this.__validateCleanConfig();
+    this._validateEmsdkConfig();
+  }
+
+  __validateBuildConfig() {
+    if (!('build' in this.config)
+        || !('path' in this.config.build))
+      throw new RangeError('Build config must have build.path set to your source directory (which contains Makefile).');
+
+    if (!('target' in this.config.build))
+      this.config.build.target = null;
+
+    if (!('arguments' in this.config.build)
+        || !this.config.build.arguments)
+      this.config.build.arguments = [];
+    else if (!Array.isArray(this.config.build.arguments))
+      this.config.build.arguments = [this.config.build.arguments];
+  }
+
+  __validateCleanConfig() {
+    if (!('clean' in this.config))
+      this.config.clean = {};
+
+    if (!('paths' in this.config.clean)
+        || !this.config.clean.paths)
+      this.config.clean.paths = [];
+    else if (!Array.isArray(this.config.clean.paths))
+      this.config.clean.paths = [this.config.clean.paths];
   }
 
 ////////////////////////////////////////////////////////////////////////
 // Implementations
 ////////////////////////////////////////////////////////////////////////
 
-  async __configure(options) {
+  async _configure() {
     // Nothing to do, make is not configurable
   }
 
-  async __build(target, options) {
-    // one-arg: (options)
-    if (target instanceof Object) {
-      options = target;
-      target = null;
-    }
-  
-    // make options are not the same as configure options,
-    // so do not default to those.
-    options = options ? this._processOptions(options) : [];
-
+  async _build() {
     // build args
     let args;
-    if (target)
-      args = [this.makeSubCommand, target, ...options];
+    if (this.config.build.target)
+      args = [this.makeSubCommand, this.config.build.target, ...this.config.build.arguments];
     else
-      args = [this.makeSubCommand, ...options];
+      args = [this.makeSubCommand, ...this.config.build.arguments];
 
     await emsdk.run(this.makeCommand, args,
-      {cwd: this.makeDir, shell: (process.platform === 'win32')}
+      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
     );
   }
 
-  async __reconfigure(options) {
-    // Process options here so we can replace the
-    // default ones.
-    options = this._processOptions(options);
-    await this.clean();
-    await this.__configure(options);
-    this.options = options;
-  }
-
-  async __rebuild(target, makeOptions) {
-    await this.clean();
-    await this.__build(target, makeOptions);
-  }
-
-  async __compile(target, makeOptions) {
-    try {
-      await this.__build(target, makeOptions);
-    }
-    catch (e) {
-      console.log("Build has been failed, trying to do a full rebuild.");
-      await this.__rebuild(target, makeOptions);
-    }
-  }
-
 ////////////////////////////////////////////////////////////////////////
-// Bindings
+// Binding Helpers
 ////////////////////////////////////////////////////////////////////////
 
-  async configure(options) {
-    return this.__bindCommand(this, this.__configure, options);
+  async _bindConfigCommand(impl, ...args) {
+    // Nothing to do
+    return this._bindCommand(impl, ...args);
   }
 
-  async build(target, options) {
-    return this.__bindCommand(this, this.__build, target, options);
+  async _bindMakeCommand(impl, ...args) {
+    // Throws error if Make is not installed.
+    await checkMakeInstalled();
+    this.makeSubCommand = makeCommand;
+    return this._bindCommand(impl, ...args);
   }
 
-  async reconfigure(options) {
-    return this.__bindCommand(this, this.__reconfigure, options);
-  }
-
-  async rebuild(target, makeOptions) {
-    return this.__bindCommand(this, this.__rebuild, target, makeOptions);
-  }
-
-  async compile(target, makeOptions) {
-    return this.__bindCommand(this, this.__compile, target, makeOptions);
+  async _bindConfigMakeCommand(impl, ...args) {
+    // Throws error if Make is not installed.
+    await checkMakeInstalled();
+    this.makeSubCommand = makeCommand;
+    return this._bindCommand(impl, ...args);
   }
 }
