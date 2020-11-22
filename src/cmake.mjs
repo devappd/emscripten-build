@@ -15,6 +15,15 @@ function _mainScript(defaultName) {
   return process.argv[1] || defaultName
 }
 
+function _mainModuleDir() {
+  let mainScript = _mainScript('.');
+
+  if (mainScript === '.')
+    return path.resolve('.');
+  else
+    return path.resolve(path.dirname(mainScript));
+}
+
 // https://stackoverflow.com/a/53530146
 function _isDir(path) {
   try {
@@ -27,50 +36,123 @@ function _isDir(path) {
 }
 
 export default class CMake extends Bootstrap {
-  constructor(configDir, cacheDir, options = null) {
-    // two-args: (configDir, options)
-    if (options === null) {
-      options = cacheDir;
-
-      // cacheDir defaults to build/ relative to the
-      // main script or to the CWD if interactive shell.
-      let mainScriptDir = path.resolve(_mainScript('.'));
-      if (!_isDir(path))
-        mainScriptDir = path.dirname(mainScriptDir);
-      cacheDir = path.join(mainScriptDir, 'build');
-    }
-
-    let cleanDirs = [cacheDir];
-
-    super(configDir, cacheDir, cleanDirs, options);
+  constructor(workingConfig) {
+    super(workingConfig);
 
     this.configCommand = 'emcmake';
     this.configSubCommand = 'cmake';
+
+    this.__validateConfig();
   }
 
+////////////////////////////////////////////////////////////////////////
+// Config validation
+////////////////////////////////////////////////////////////////////////
+
+  __validateConfig() {
+    this.__validateConfigureConfig();
+    this.__validateBuildConfig();
+    this.__validateCleanConfig();
+    this._validateEmsdkConfig();
+  }
+
+  __validateConfigureConfig() {
+    if (!('configure' in this.config)
+        || !('path' in this.config.configure))
+      throw new RangeError('Configure config must have configure.path set to your source directory (which contains ./configure).');
+    
+    if (!('cachePath' in this.config.configure)
+        || !this.config.configure.cachePath)
+      this.config.configure.cachePath = path.join(_mainModuleDir(), 'build');
+
+      if (!('generator' in this.config.configure)
+        || !this.config.configure.generator)
+      this.config.configure.generator = 'Ninja';
+
+      if (!('type' in this.config.configure)
+        || !this.config.configure.type)
+      this.config.configure.type = 'Release';
+
+      if (!('outputPath' in this.config.configure)
+        || !this.config.configure.outputPath)
+      this.config.configure.outputPath = this.config.configure.cachePath;
+
+    if (!('arguments' in this.config.configure)
+        || !this.config.configure.arguments)
+      this.config.configure.arguments = [];
+    else if (!Array.isArray(this.config.configure.arguments))
+      this.config.configure.arguments = [this.config.configure.arguments];
+  }
+
+  __validateBuildConfig() {
+    if (!('build' in this.config))
+      this.config.build = {};
+
+    if (!('path' in this.config.build)
+        || !this.config.build.path)
+      this.config.build.path = this.config.configure.cachePath;
+
+    if (!('target' in this.config.build))
+      this.config.build.target = null;
+
+    if (!('arguments' in this.config.build)
+        || !this.config.build.arguments)
+      this.config.build.arguments = [];
+    else if (!Array.isArray(this.config.build.arguments))
+      this.config.build.arguments = [this.config.build.arguments];
+  }
+
+  __validateCleanConfig() {
+    if (!('clean' in this.config))
+      this.config.clean = {};
+
+    if (!('paths' in this.config.clean)
+        || !this.config.clean.paths)
+      this.config.clean.paths = [this.config.configure.cachePath];
+    else if (!Array.isArray(this.config.clean.paths))
+      this.config.clean.paths = [this.config.clean.paths];
+  }
+
+////////////////////////////////////////////////////////////////////////
+// Implementation helpers
+////////////////////////////////////////////////////////////////////////
+
   async __ensureConfigure() {
-    if(!fs.existsSync(path.join(this.makeDir, "CMakeCache.txt"))) {
-      await this.__configure();
+    if(!fs.existsSync(path.join(this.config.build.path, "CMakeCache.txt"))) {
+      await this._configure();
       // make sure to reload the make variables after configuring
-      await this.__determineMakeFromCache();
+      await this.__determineMake(!!this.config.configure.generator);
     }
   }
 
-  // Populate this.makeCommand from options so we can configure CMake
-  // with the correct make toolset.
-  async __determineMakeFromOptions(options) {
+  __buildConfigureArguments() {
+    return [
+      this.config.configure.path,
+      '-G', this.config.configure.generator,
+      `-DCMAKE_BUILD_TYPE="${this.config.configure.type}"`,
+      `-DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${this.config.configure.outputPath}"`,
+      `-DCMAKE_LIBRARY_OUTPUT_DIRECTORY="${this.config.configure.outputPath}"`,
+      `-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="${this.config.configure.outputPath}"`,
+      ...this.config.configure.arguments
+    ];
+  }
+
+  // Populate this.makeCommand
+  async __determineMake(fromCache = false) {
     // Populate this.makeCommand instead of this.makeSubCommand
     // because we call these executables directly
     // instead of thru an emsdk script.
 
-    let args = this._processOptions(options);
+    if (fromCache && !_isDir(this.config.build.path))
+      // Nothing to do
+      return;
+
+    let generator = this.config.configure.generator.toLowerCase();
 
     // Ninja
-    let hasNinja = (args.filter(x => {
-      let test = x.toLowerCase();
-      // test for 'Ninja' and '-G"Ninja"'
-      return (test === 'ninja' || (test.includes('ninja') && test.startsWith('-g')));
-    }).length > 0);
+    let hasNinja = fromCache
+      ? fs.existsSync(path.join(this.config.build.path, 'build.ninja'))
+      : generator === 'ninja';
 
     if (hasNinja) {
       await environment.checkNinjaInstalled();
@@ -81,7 +163,9 @@ export default class CMake extends Bootstrap {
 
     // Makefiles
     // test for 'Unix Makefiles', 'MinGW Makefiles', etc.
-    let hasMake = (args.filter(x => x.toLowerCase().includes('makefiles')).length > 0);
+    let hasMake = fromCache
+      ? fs.existsSync(path.join(this.config.build.path, 'Makefile'))
+      : generator.includes('makefiles');
 
     if (hasMake) {
       await environment.checkMakeInstalled();
@@ -92,7 +176,9 @@ export default class CMake extends Bootstrap {
 
     // MSBuild
     // test for 'Visual Studio 14', etc.
-    let hasVS = (args.filter(x => x.toLowerCase().includes('visual studio ')).length > 0);
+    let hasVS = fromCache
+      ? (glob.sync("*.sln", { cwd: this.config.build.path }).length > 0)
+      : generator.includes('visual studio ');
 
     if (hasVS) {
       await environment.checkMSBuildInstalled();
@@ -100,175 +186,83 @@ export default class CMake extends Bootstrap {
       this.makeSubCommand = null;
       return;
     }
-  }
-
-  // Populate this.makeCommand from a configured cache so we can use
-  // the correct build toolset to make the project.
-  async __determineMakeFromCache() {
-    // Populate this.makeCommand instead of this.makeSubCommand
-    // because we call these executables directly
-    // instead of thru an emsdk script.
-
-    // Ninja
-    let hasNinja = fs.existsSync(path.join(this.makeDir, 'build.ninja'));
-
-    if (hasNinja) {
-      await environment.checkNinjaInstalled();
-      this.makeCommand = environment.ninjaCommand;
-      this.makeSubCommand = null;
-      return;
-    }
-
-    // Makefiles
-    let hasMake = fs.existsSync(path.join(this.makeDir, 'Makefile'));
-
-    if (hasMake) {
-      await environment.checkMakeInstalled();
-      this.makeCommand = environment.makeCommand;
-      this.makeSubCommand = null;
-      return;
-    }
-
-    // MSBuild
-    let hasVS = (glob.sync("*.sln", { cwd: this.makeDir }).length > 0);
-
-    if (hasVS) {
-      await environment.checkMSBuildInstalled();
-      this.makeCommand = environment.msbuildCommand;
-      this.makeSubCommand = null;
-      return;
-    }
-  }
-
-  __ensureMakeDirExists() {
-    let result = shelljs.mkdir('-p', this.makeDir);
-    if (result.code !== 0)
-      throw new Error(result.stderr);
-  }
-
-  async __bindConfigCommand(ctx, impl, ...args) {
-    // Throws error if CMake is not installed.
-    await environment.checkCMakeInstalled();
-    this.configSubCommand = environment.cMakeCommand;
-
-    this.__ensureMakeDirExists();
-
-    return super._bindCommand(ctx, impl, ...args);
-  }
-
-  async __bindMakeCommand(ctx, impl, ...args) {
-    // Throws error if build command is not found.
-    await this.__determineMakeFromCache();
-
-    this.__ensureMakeDirExists();
-
-    return super._bindCommand(ctx, impl, ...args);
-  }
-
-  async __bindCommand(ctx, impl, ...args) {
-    // Check both config and build commands
-    await environment.checkCMakeInstalled();
-    this.configSubCommand = environment.cMakeCommand;
-
-    await this.__determineMakeFromCache();
-
-    this.__ensureMakeDirExists();
-
-    return super._bindCommand(ctx, impl, ...args);
   }
 
 ////////////////////////////////////////////////////////////////////////
 // Implementations
 ////////////////////////////////////////////////////////////////////////
 
-  async __configure(options) {
-    options = this._processOptions(options);
+  async _configure() {
+    await this.__determineMake();
 
-    await this.__determineMakeFromOptions(options);
+    let args = this.__buildConfigureArguments();
 
     if (this.makeCommand)
-      options = options.concat([`-DCMAKE_MAKE_PROGRAM="${this.makeCommand}"`])
+      args = args.concat([`-DCMAKE_MAKE_PROGRAM="${this.makeCommand}"`])
 
     await emsdk.run(this.configCommand,
-      [this.configSubCommand, this.configDir, ...options],
-      {cwd: this.makeDir, shell: (process.platform === 'win32')}
+      [this.configSubCommand, ...args],
+      {cwd: this.config.configure.cachePath, shell: (process.platform === 'win32')}
     );
   }
 
-  async __build(target, options) {
-    // one-arg: (options)
-    if (target instanceof Object) {
-      options = target;
-      target = null;
-    }
-
-    // Make sure everything's configured before building
+  async _build() {
+    // Make sure everything's configured before building.
     await this.__ensureConfigure();
 
-    // make options are not the same as configure options,
-    // so do not default to those.
-    options = options ? this._processOptions(options) : [];
-
     // build args
+    let args;
+    if (this.config.build.target)
+      args = [this.config.build.target, ...this.config.build.arguments];
+    else
+      args = [...this.config.build.arguments];
+
     // note we do not use this.makeSubCommand because
     // we call the makeCommand directly instead of thru
     // an emsdk script.
-    let args;
-    if (target)
-      args = [target, ...options];
-    else
-      args = [...options];
-
     await emsdk.run(this.makeCommand, args,
-      {cwd: this.makeDir, shell: (process.platform === 'win32')}
+      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
     );
   }
 
-  async __reconfigure(options) {
-    // Process options here so we can replace the
-    // default ones.
-    options = this._processOptions(options);
-    await this.clean();
-    await this.__configure(options);
-    this.args = options;
-  }
-
-  async __rebuild(target, makeOptions) {
-    await this.clean();
-    await this.__build(target, makeOptions);
-  }
-
-  async __compile(target, makeOptions) {
-    try {
-      await this.__build(target, makeOptions);
-    }
-    catch (e) {
-      console.log("Build has been failed, trying to do a full rebuild.");
-      await this.__rebuild(target, makeOptions);
-    }
-  }
-
 ////////////////////////////////////////////////////////////////////////
-// Bindings
+// Binding Helpers
 ////////////////////////////////////////////////////////////////////////
 
-  async configure(options) {
-    return this.__bindConfigCommand(this, this.__configure, options);
+  __ensureMakeDirExists() {
+    let result = shelljs.mkdir('-p', this.config.build.path);
+    if (result.code !== 0)
+      throw new Error(result.stderr);
   }
 
-  async build(target, options) {
-    return this.__bindMakeCommand(this, this.__build, target, options);
+  async _bindConfigCommand(impl, ...args) {
+    // Throws error if CMake is not installed.
+    await environment.checkCMakeInstalled();
+    this.configSubCommand = environment.cMakeCommand;
+
+    this.__ensureMakeDirExists();
+
+    return this._bindCommand(impl, ...args);
   }
 
-  async reconfigure(options) {
-    return this.__bindConfigCommand(this, this.__reconfigure, options);
+  async _bindMakeCommand(impl, ...args) {
+    // Throws error if build command is not found.
+    await this.__determineMake(!!this.config.configure.generator);
+    
+    this.__ensureMakeDirExists();
+
+    return this._bindCommand(impl, ...args);
   }
 
-  async rebuild(target, makeOptions) {
-    return this.__bindCommand(this, this.__rebuild, target, makeOptions);
-  }
+  async _bindConfigMakeCommand(impl, ...args) {
+    // Check both config and build commands
+    await environment.checkCMakeInstalled();
+    this.configSubCommand = environment.cMakeCommand;
 
-  async compile(target, makeOptions) {
-    return this.__bindCommand(this, this.__compile, target, makeOptions);
+    await this.__determineMake(!!this.config.configure.generator);
+
+    this.__ensureMakeDirExists();
+
+    return this._bindCommand(impl, ...args);
   }
 }
