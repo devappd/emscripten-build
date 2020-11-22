@@ -36,7 +36,7 @@ This package reads parameters from `<your_module>/emscripten.build.json`.
 
 In the config file, you can list multiple configurations by name:
 
-```jsonc
+```js
 {
     // Selects the EMSDK version to use.
     // Default: "latest"
@@ -79,9 +79,9 @@ npm install --emsdk='/your/install/path' --save-dev git+https://github.com/devap
 
 You may also install this package globally.
 
-The `--emsdk` switch allows you to specify your own install path for EMSDK. This path is saved to your `npmrc` user config. 
+The `--emsdk` switch allows you to specify your own install path for EMSDK. This path is saved to your `npmrc` user config and is referred to every time this package is installed. 
 
-If the path is not specified, this package will warn you that EMSDK will be installed into your `node_modules`. You should specify a path to save disk space across duplicate modules. 
+If the path is not specified, this package will warn you that EMSDK will be installed into your `node_modules`. You should specify a path to save disk space across duplicated modules. 
 
 In addition, if you are running on Windows, this package will warn you that EMSDK installation will fail if your install path is longer than 85 characters.
 
@@ -126,8 +126,6 @@ will be selected.
 
 * `emscripten compile [config_name]` -- Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
 
-* `emscripten install [config_name]` -- Install the given EMSDK version into the given path. Path defaults to the user's NPM config.
-
 * `emscripten run <command> [arg...]` -- Runs a given command under the context of the EMSDK environment.
 
 ## JavaScript Usage
@@ -145,8 +143,6 @@ This package also supplies JavaScript bindings for the above commands:
 * `emscripten.rebuild(configName, customConfig)`
 
 * `emscripten.compile(configName, customConfig)`
-
-* `emscripten.install(configName, customConfig)`
 
 For all methods, `configName` and `customConfig` are optional.
 
@@ -168,12 +164,9 @@ async () => {
 };
 ```
 
-However, you
-cannot select a new config in the chained bootstrap nor specify a fragment to edit it. If you wish to do so, you need to call a method on the `emscripten` module.
+However, you cannot select a new config in the chained bootstrap nor specify a fragment to edit it. If you wish to do so, you need to call a method on the `emscripten` module.
 
-You can specify an object fragment to override certain parameters
-in your config. Note in this example that we're not chaining calls
-on `bootstrap`, but we are calling `emscripten.build()` every time.
+You can specify an object fragment to override certain parameters in your config. Note in this example that we're not chaining calls on `bootstrap`, but we are calling `emscripten.build()` every time.
 
 ```js
 async () => {
@@ -198,13 +191,7 @@ async () => {
 };
 ```
 
-Note that this package is an ECMAScript module. If you wish to use it from CommonJS,
-you will need to call `await import()` instead of `require()`.
-
-## Custom Command
-
-With `run()`, you can run any command inside the EMSDK environment. When you call this
-method, it executes immediately. It does not return a bootstrap.
+With `emscripten.run()`, you can run any command inside the EMSDK environment. It does not return a bootstrap.
 
 ```js
 async () => {
@@ -233,6 +220,8 @@ async () => {
 }
 ```
 
+Note that this package is an ECMAScript module. If you wish to use it from CommonJS, you will need to call `await import()` instead of `require()`.
+
 ## Make Configuration
 
 Make does not have `configure` parameters. As such, the
@@ -240,13 +229,12 @@ Make does not have `configure` parameters. As such, the
 
 ### Build
 
-```jsonc
+```js
 {
     "type": "make",
 
     "build": {
-        // Path which contains Makefile.
-        // Default: config["configure"]["path"]
+        // Path which contains Makefile. Required.
         "path": "/path/to/dir/with/Makefile",
 
         // Target to pass to Make
@@ -266,7 +254,7 @@ Make does not have `configure` parameters. As such, the
 
 ### Clean
 
-```jsonc
+```js
 {
     "type": "make",
 
@@ -288,7 +276,7 @@ Make does not have `configure` parameters. As such, the
 
 ### Configure
 
-```jsonc
+```js
 {
     "type": "configure",
 
@@ -311,7 +299,7 @@ Make does not have `configure` parameters. As such, the
 
 ### Build
 
-```jsonc
+```js
 {
     "type": "configure",
 
@@ -339,7 +327,7 @@ Make does not have `configure` parameters. As such, the
 
 ### Clean
 
-```jsonc
+```js
 {
     "type": "configure",
 
@@ -362,7 +350,7 @@ Make does not have `configure` parameters. As such, the
 
 ### Configure
 
-```jsonc
+```js
 {
     "type": "cmake",
 
@@ -403,7 +391,7 @@ Make does not have `configure` parameters. As such, the
 
 ### Build
 
-```jsonc
+```js
 {
     "type": "cmake",
 
@@ -425,7 +413,7 @@ Make does not have `configure` parameters. As such, the
 
 ### Clean
 
-```jsonc
+```js
 {
     "type": "cmake",
 
@@ -443,13 +431,6 @@ Make does not have `configure` parameters. As such, the
     }
 }
 ```
-
-## To Do
-
-* [ ] Command line scripts
-* [ ] Accept an options object instead of a command line argument array.
-* [ ] Cleanup
-* [ ] Tests
 
 ## License
 
