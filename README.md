@@ -32,7 +32,7 @@ You specify your build parameters in a configuration file; see below.
 
 ## Configuration
 
-This package reads parameters from `<your_module>/emscripten.build.json`.
+This package reads parameters from `<your_module>/emscripten.build.json` or `<current_working_dir>/emscripten.build.json`.
 
 In the config file, you can list multiple configurations by name:
 

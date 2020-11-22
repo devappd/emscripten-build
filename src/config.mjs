@@ -18,7 +18,7 @@ function _mainModuleDir() {
   // Presume script path is <module>/src
   // \todo look for next highest package.json
   if (mainScript === '.')
-    return path.resolve('.');
+    return process.cwd();
   else
     return path.resolve(path.dirname(mainScript));
 }
@@ -30,29 +30,35 @@ function _getMasterConfig() {
 
   const mainScriptDir = _mainModuleDir();
 
-  // Try our JSON config
-  const buildConfigPath = path.join(mainScriptDir, 'emscripten.build.json');
+  // Because we can't reliably get the main module,
+  // hack things and search CWD for our config
+  const searchSet = [mainScriptDir, process.cwd()];
 
-  if(fs.existsSync(buildConfigPath))
-    return JSON.parse(fs.readFileSync(buildConfigPath, 'utf8'));
+  for (const searchPath of searchSet) {
+    // Try our JSON config
+    const buildConfigPath = path.join(searchPath, 'emscripten.build.json');
 
-  // Same, but JSONC format
-  const buildCConfigPath = path.join(mainScriptDir, 'emscripten.build.jsonc');
+    if(fs.existsSync(buildConfigPath))
+      return JSON.parse(fs.readFileSync(buildConfigPath, 'utf8'));
 
-  if(fs.existsSync(buildCConfigPath))
-    return JSONC.parse(fs.readFileSync(buildCConfigPath, 'utf8'));
-  
-  // Now try package.json
-  // const packagePath = path.join(mainScriptDir, 'package.json');
+    // Same, but JSONC format
+    const buildCConfigPath = path.join(searchPath, 'emscripten.build.jsonc');
 
-  // Node's ES6 module loader bugs out here, so dummy it out.
-  // "Unexpected strict mode reserved word"
-  // if(fs.existsSync(packagePath)) {
-  //   const package = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-  //   if ('emscriptenBuild' in package &&
-  //     package.emscriptenBuild instanceof Object)
-  //     return package.emscriptenBuild;
-  // }
+    if(fs.existsSync(buildCConfigPath))
+      return JSONC.parse(fs.readFileSync(buildCConfigPath, 'utf8'));
+    
+    // Now try package.json
+    // const packagePath = path.join(searchPath, 'package.json');
+
+    // Node's ES6 module loader bugs out here, so dummy it out.
+    // "Unexpected strict mode reserved word"
+    // if(fs.existsSync(packagePath)) {
+    //   const package = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    //   if ('emscriptenBuild' in package &&
+    //     package.emscriptenBuild instanceof Object)
+    //     return package.emscriptenBuild;
+    // }
+  }
 
   // Return an empty object
   return {};
