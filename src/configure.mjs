@@ -1,6 +1,7 @@
 import Bootstrap from './bootstrap.mjs';
 import emsdk from 'emsdk-npm';
 import { checkMakeInstalled, makeCommand } from './environment.mjs';
+import { TryResolvePath } from './utils.mjs';
 
 export default class Configure extends Bootstrap {
   constructor(workingConfig) {
@@ -30,6 +31,8 @@ export default class Configure extends Bootstrap {
     if (!('configure' in this.config)
         || !('path' in this.config.configure))
       throw new RangeError('Configure config must have configure.path set to your source directory (which contains ./configure).');
+    else
+      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config._configPath);
     
     if (!('arguments' in this.config.configure)
         || !this.config.configure.arguments)
@@ -45,6 +48,8 @@ export default class Configure extends Bootstrap {
     if (!('path' in this.config.build)
         || !this.config.build.path)
       this.config.build.path = this.config.configure.path;
+    else
+      this.config.build.path = TryResolvePath(this.config.build.path, this.config._configPath);
 
     if (!('target' in this.config.build))
       this.config.build.target = null;
@@ -63,8 +68,14 @@ export default class Configure extends Bootstrap {
     if (!('paths' in this.config.clean)
         || !this.config.clean.paths)
       this.config.clean.paths = [];
-    else if (!Array.isArray(this.config.clean.paths))
-      this.config.clean.paths = [this.config.clean.paths];
+    else {
+      if (!Array.isArray(this.config.clean.paths))
+        this.config.clean.paths = [this.config.clean.paths];
+
+      this.config.clean.paths = this.config.clean.paths.map((currentValue) => {
+        return TryResolvePath(currentValue, this.config._configPath);
+      });
+    }
   }
 
 ////////////////////////////////////////////////////////////////////////

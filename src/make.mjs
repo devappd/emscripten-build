@@ -1,6 +1,7 @@
 import Bootstrap from './bootstrap.mjs';
 import emsdk from 'emsdk-npm';
 import { checkMakeInstalled, makeCommand } from './environment.mjs';
+import { TryResolvePath } from './utils.mjs';
 
 export default class Make extends Bootstrap {
   constructor(workingConfig) {
@@ -26,7 +27,9 @@ export default class Make extends Bootstrap {
     if (!('build' in this.config)
         || !('path' in this.config.build))
       throw new RangeError('Build config must have build.path set to your source directory (which contains Makefile).');
-
+    else
+      this.config.build.path = TryResolvePath(this.config.build.path, this.config._configPath);
+    
     if (!('target' in this.config.build))
       this.config.build.target = null;
 
@@ -44,8 +47,14 @@ export default class Make extends Bootstrap {
     if (!('paths' in this.config.clean)
         || !this.config.clean.paths)
       this.config.clean.paths = [];
-    else if (!Array.isArray(this.config.clean.paths))
-      this.config.clean.paths = [this.config.clean.paths];
+    else {
+      if (!Array.isArray(this.config.clean.paths))
+        this.config.clean.paths = [this.config.clean.paths];
+
+      this.config.clean.paths = this.config.clean.paths.map((currentValue) => {
+        return TryResolvePath(currentValue, this.config._configPath);
+      });
+    }
   }
 
 ////////////////////////////////////////////////////////////////////////

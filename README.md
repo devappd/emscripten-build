@@ -17,22 +17,17 @@ emscripten build
 or invoking from JavaScript:
 
 ```js
-async () => {
-    const emscripten = await import('./node_modules/emscripten-build/src/index.mjs');
+const emscripten = import('emscripten-build');
 
-    return emscripten.build()
-        .then(bootstrap => {
-            // You can chain additional calls,
-            // e.g., bootstrap.clean()
-        });
-}
+emscripten.build()
+    .then(_ => { /* ... */ });
 ```
 
 You specify your build parameters in a configuration file; see below.
 
 ## Configuration
 
-This package reads parameters from `<your_module>/emscripten.build.json`.
+This package reads parameters from `<your_module>/emscripten.build.json` or `<current_working_dir>/emscripten.build.json`.
 
 In the config file, you can list multiple configurations by name:
 
@@ -155,13 +150,11 @@ Calling these methods will perform the action and return a Promise that yields a
 On the Bootstrap object, you can chain multiple calls while reusing the same config.
 
 ```js
-async () => {
-    const emscripten = await import('./node_modules/emscripten-build/src/index.mjs');
+const emscripten = require('emscripten-build');
 
-    return emscripten.configure()
-        .then(bootstrap => bootstrap.build())
-        .then(bootstrap => bootstrap.clean())
-};
+emscripten.configure()
+    .then(bootstrap => bootstrap.build())
+    .then(bootstrap => bootstrap.clean());
 ```
 
 However, you cannot select a new config in the chained bootstrap nor specify a fragment to edit it. If you wish to do so, you need to call a method on the `emscripten` module.
@@ -169,58 +162,60 @@ However, you cannot select a new config in the chained bootstrap nor specify a f
 You can specify an object fragment to override certain parameters in your config. Note in this example that we're not chaining calls on `bootstrap`, but we are calling `emscripten.build()` every time.
 
 ```js
-async () => {
-    const emscripten = await import('./node_modules/emscripten-build/src/index.mjs');
+const emscripten = require('emscripten-build');
 
-    return emscripten.configure()
-        .then(_ => emscripten.build({
-            "build": {
-                "target": "MainProject"
-            }
-        }))
-        .then(_ => emscripten.build({
-            "build": {
-                "target": "SubProject"
-            }
-        }))
-        .then(_ => emscripten.clean({
-            "clean": {
-                "paths": [ "/path/to/obj" ]
-            }
-        }))
-};
+emscripten.configure()
+    .then(_ => emscripten.build({
+        "build": {
+            "target": "MainProject"
+        }
+    }))
+    .then(_ => emscripten.build({
+        "build": {
+            "target": "SubProject"
+        }
+    }))
+    .then(_ => emscripten.clean({
+        "clean": {
+            "paths": [ "/path/to/obj" ]
+        }
+    }));
 ```
 
 With `emscripten.run()`, you can run any command inside the EMSDK environment. It does not return a bootstrap.
 
 ```js
-async () => {
-    const emscripten = await import('./node_modules/emscripten-build/src/index.mjs');
+const emscripten = require('emscripten-build');
 
-    return emscripten.run('command',
-        ['args1','args2','args3', /*...*/],
-        { /* child_process.spawn options, e.g., cwd */ }
-    )
-        .then(_ => { /*...*/ })
-};
+emscripten.run('command',
+    ['args1','args2','args3', /*...*/],
+    { /* child_process.spawn options, e.g., cwd */ }
+)
+    .then(_ => { /*...*/ });
 ```
 
 You can also invoke `run()` on an existing bootstrap. In this case, it can be chained
 with other bootstrap calls.
 
 ```js
-async () => {
-    const emscripten = await import('./node_modules/emscripten-build/src/index.mjs');
+const emscripten = require('emscripten-build');
 
-    return emscripten.build()
-        .then(bootstrap => bootstrap.run('command', 
-            ['args1', 'args2', 'args3', /*...*/],
-            { /* child_process.spawn options, e.g., cwd */ }
-        ));
-}
+emscripten.build()
+    .then(bootstrap => bootstrap.run('command', 
+        ['args1', 'args2', 'args3', /*...*/],
+        { /* child_process.spawn options, e.g., cwd */ }
+    ));
 ```
 
-Note that this package is an ECMAScript module. If you wish to use it from CommonJS, you will need to call `await import()` instead of `require()`.
+## Configuration Files
+
+The below describes the parameters you can set for the `configure`, `build`, and `clean` steps. Specify each
+of these in your config.
+
+Note that the only required parameter is `config["configure"]["path"]` (or `config["build"]["path"]` for Make.)
+The other parameters have defaults as specified below.
+
+If any relative paths are specified, they are resolved in relation to the config file's directory.
 
 ## Make Configuration
 
