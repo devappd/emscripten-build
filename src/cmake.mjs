@@ -5,35 +5,7 @@ import glob from 'glob';
 import fs from 'fs';
 import emsdk from 'emsdk-npm';
 import shelljs from 'shelljs';
-
-// https://github.com/tapjs/libtap/pull/21/files
-function _mainScript(defaultName) {
-  if (typeof repl !== 'undefined' || '_eval' in process) {
-    return defaultName
-  }
-
-  return process.argv[1] || defaultName
-}
-
-function _mainModuleDir() {
-  let mainScript = _mainScript('.');
-
-  if (mainScript === '.')
-    return path.resolve('.');
-  else
-    return path.resolve(path.dirname(mainScript));
-}
-
-// https://stackoverflow.com/a/53530146
-function _isDir(path) {
-  try {
-      var stat = fs.lstatSync(path);
-      return stat.isDirectory();
-  } catch (e) {
-      // lstatSync throws an error if path doesn't exist
-      return false;
-  }
-}
+import { MainModuleDir, IsDir, TryResolvePath } from './utils.mjs';
 
 export default class CMake extends Bootstrap {
   constructor(workingConfig) {
@@ -60,10 +32,14 @@ export default class CMake extends Bootstrap {
     if (!('configure' in this.config)
         || !('path' in this.config.configure))
       throw new RangeError('Configure config must have configure.path set to your source directory (which contains ./configure).');
-    
+    else
+      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config._configPath);
+
     if (!('cachePath' in this.config.configure)
         || !this.config.configure.cachePath)
-      this.config.configure.cachePath = path.join(_mainModuleDir(), 'build');
+      this.config.configure.cachePath = path.join(MainModuleDir(), 'build');
+    else
+      this.config.configure.cachePath = TryResolvePath(this.config.configure.cachePath, this.config._configPath);
 
       if (!('generator' in this.config.configure)
         || !this.config.configure.generator)
@@ -76,6 +52,8 @@ export default class CMake extends Bootstrap {
       if (!('outputPath' in this.config.configure)
         || !this.config.configure.outputPath)
       this.config.configure.outputPath = this.config.configure.cachePath;
+    else
+      this.config.configure.outputPath = TryResolvePath(this.config.configure.outputPath, this.config._configPath);
 
     if (!('arguments' in this.config.configure)
         || !this.config.configure.arguments)
@@ -91,6 +69,8 @@ export default class CMake extends Bootstrap {
     if (!('path' in this.config.build)
         || !this.config.build.path)
       this.config.build.path = this.config.configure.cachePath;
+    else
+      this.config.build.path = TryResolvePath(this.config.build.path, this.config._configPath);
 
     if (!('target' in this.config.build))
       this.config.build.target = null;
@@ -109,8 +89,14 @@ export default class CMake extends Bootstrap {
     if (!('paths' in this.config.clean)
         || !this.config.clean.paths)
       this.config.clean.paths = [this.config.configure.cachePath];
-    else if (!Array.isArray(this.config.clean.paths))
-      this.config.clean.paths = [this.config.clean.paths];
+    else {
+      if (!Array.isArray(this.config.clean.paths))
+        this.config.clean.paths = [this.config.clean.paths];
+
+      this.config.clean.paths = this.config.clean.paths.map((currentValue) => {
+        return TryResolvePath(currentValue, this.config._configPath);
+      });
+    }
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -143,7 +129,7 @@ export default class CMake extends Bootstrap {
     // because we call these executables directly
     // instead of thru an emsdk script.
 
-    if (fromCache && !_isDir(this.config.build.path))
+    if (fromCache && !IsDir(this.config.build.path))
       // Nothing to do
       return;
 

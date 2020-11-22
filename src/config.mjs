@@ -2,57 +2,54 @@ import mergeWith from 'lodash.mergewith';
 import JSONC from 'jsonc-parser';
 import path from 'path';
 import fs from 'fs';
-
-// https://github.com/tapjs/libtap/pull/21/files
-function _mainScript(defaultName) {
-  if (typeof repl !== 'undefined' || '_eval' in process) {
-    return defaultName
-  }
-
-  return process.argv[1] || defaultName
-}
-
-function _mainModuleDir() {
-  let mainScript = _mainScript('.');
-
-  // Presume script path is <module>/src
-  // \todo look for next highest package.json
-  if (mainScript === '.')
-    return path.resolve('.');
-  else
-    return path.resolve(path.dirname(mainScript));
-}
+import { MainModuleDir } from './utils.mjs';
 
 function _getMasterConfig() {
   // Base configs are sourced from:
   // 1. <main_module>/emscripten.build.json(c)
   // 2. <main_module>/packages.json
 
-  const mainScriptDir = _mainModuleDir();
+  const mainScriptDir = MainModuleDir();
 
-  // Try our JSON config
-  const buildConfigPath = path.join(mainScriptDir, 'emscripten.build.json');
+  // Because we can't reliably get the main module,
+  // hack things and search CWD for our config
+  const searchSet = [mainScriptDir, process.cwd()];
 
-  if(fs.existsSync(buildConfigPath))
-    return JSON.parse(fs.readFileSync(buildConfigPath, 'utf8'));
+  for (const searchPath of searchSet) {
+    // Try our JSON config
+    const buildConfigPath = path.join(searchPath, 'emscripten.build.json');
+    let masterConfig = null;
 
-  // Same, but JSONC format
-  const buildCConfigPath = path.join(mainScriptDir, 'emscripten.build.jsonc');
+    if(fs.existsSync(buildConfigPath)) {
+      masterConfig = JSON.parse(fs.readFileSync(buildConfigPath, 'utf8'));
+      masterConfig['_configPath'] = searchPath;
+      return masterConfig;
+    }
 
-  if(fs.existsSync(buildCConfigPath))
-    return JSONC.parse(fs.readFileSync(buildCConfigPath, 'utf8'));
-  
-  // Now try package.json
-  // const packagePath = path.join(mainScriptDir, 'package.json');
+    // Same, but JSONC format
+    const buildCConfigPath = path.join(searchPath, 'emscripten.build.jsonc');
 
-  // Node's ES6 module loader bugs out here, so dummy it out.
-  // "Unexpected strict mode reserved word"
-  // if(fs.existsSync(packagePath)) {
-  //   const package = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-  //   if ('emscriptenBuild' in package &&
-  //     package.emscriptenBuild instanceof Object)
-  //     return package.emscriptenBuild;
-  // }
+    if(fs.existsSync(buildCConfigPath)) {
+      masterConfig = JSONC.parse(fs.readFileSync(buildCConfigPath, 'utf8'));
+      masterConfig['_configPath'] = searchPath;
+      return masterConfig;
+    }
+    
+    // Now try package.json
+    // const packagePath = path.join(searchPath, 'package.json');
+
+    // Node's ES6 module loader bugs out here, so dummy it out.
+    // "Unexpected strict mode reserved word"
+    // if(fs.existsSync(packagePath)) {
+    //   const package = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    //   if ('emscriptenBuild' in package &&
+    //     package.emscriptenBuild instanceof Object) {
+    //     masterConfig = package.emscriptenBuild;
+    //     masterConfig['_configPath'] = searchPath;
+    //     return masterConfig;
+    //   }
+    // }
+  }
 
   // Return an empty object
   return {};
@@ -109,6 +106,7 @@ export function GetWorkingConfig(a, b) {
   // If EMSDK variables are top-level, make note of those then remove
   let emsdkPath = null;
   let emsdkVersion = null;
+  let configPath = process.cwd();
 
   if ('emsdk' in masterConfig) {
     emsdkPath = masterConfig.emsdk;
@@ -118,6 +116,11 @@ export function GetWorkingConfig(a, b) {
   if ('emsdkVersion' in masterConfig) {
     emsdkVersion = masterConfig.emsdkVersion;
     delete masterConfig.emsdkVersion;
+  }
+
+  if ('_configPath' in masterConfig) {
+    configPath = masterConfig._configPath;
+    delete masterConfig._configPath;
   }
 
   // If config declares a default base config, then retrieve the base config.
@@ -164,6 +167,9 @@ export function GetWorkingConfig(a, b) {
 
   if (emsdkVersion && !('emsdkVersion' in workingConfig))
     workingConfig.emsdkVersion = emsdkVersion;
+
+  if (configPath && !('_configPath' in workingConfig))
+    workingConfig.configPath = configPath;
 
   return workingConfig;
 }
