@@ -2,9 +2,10 @@
   "name": "emscripten-build",
   "version": "0.0.1",
   "description": "Configure and build a C/C++ emscripten project.",
-  "main": "./src/index.js",
+  "main": "./dist/bundle.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx rollup ./src/index.mjs --format cjs --file ./dist/bundle.js",
     "postinstall": "node ./scripts/postinstall.js"
   },
   "bin": {
@@ -34,5 +35,8 @@
     "cmake-binaries": "git+https://github.com/marcolovescode/cmake-binaries.git",
     "ninja-binaries": "^1.10.1",
     "msbuild": "^1.1.3"
+  },
+  "devDependencies": {
+    "rollup": "^2.33.3"
   }
 }
