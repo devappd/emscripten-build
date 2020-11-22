@@ -14,12 +14,11 @@ npm install --emsdk='/your/install/path' --save-dev git+https://github.com/marco
 
 You may also install this package globally.
 
-Installing this package will also install the [Emscripten SDK](https://github.com/marcolovescode/emsdk-npm)
-into your node modules.
-
 The `--emsdk` switch allows you to specify your own install path for EMSDK. This path is saved to your `npmrc` user config. 
 
-If the path is not specified, this package will warn you that EMSDK will be installed into your `node_modules`. You should specify a path to save disk space across duplicate modules. In addition, if the install path is too long, this package will warn you that EMSDK installation will fail.
+If the path is not specified, this package will warn you that EMSDK will be installed into your `node_modules`. You should specify a path to save disk space across duplicate modules. 
+
+In addition, if you are running on Windows, this package will warn you that EMSDK installation will fail if your install path is longer than 85 characters.
 
 You may also specify an install path as follows:
 
@@ -27,14 +26,15 @@ You may also specify an install path as follows:
 npm config set emsdk "/your/install/path"
 ```
 
-This package also installs these dependencies:
+This package installs these dependencies:
 
+* [emsdk-npm](https://github.com/marcolovescode/emsdk-npm) -- Installs EMSDK into a location of your choice.
 * [cmake-binaries](https://github.com/marcolovescode/cmake-binaries) -- Locates CMake on your system
 or installs it into your `node_modules`.
 * [ninja-binaries](https://github.com/Banno/ninja-binaries) -- Locates ninja on your system
 or installs it into your `node_modules`.
 * [msbuild](https://github.com/jhaker/nodejs-msbuild) -- Locates MSBuild (Visual Studio) on your
-system. You'll need to have Visual Studio installed on your system.
+system. If you wish to use Visual Studio, you'll need to have it installed on your system.
 
 Usage of `make`, `configure`, `mingw32-make`, and any other build toolset, will
 require you to install those systems by yourself. Have those commands available
