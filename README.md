@@ -222,6 +222,16 @@ async () => {
 
 Note that this package is an ECMAScript module. If you wish to use it from CommonJS, you will need to call `await import()` instead of `require()`.
 
+## Configuration Files
+
+The below describes the parameters you can set for the `configure`, `build`, and `clean` steps. Specify each
+of these in your config.
+
+Note that the only required parameter is `config["configure"]["path"]` (or `config["build"]["path"]` for Make.)
+The other parameters have defaults as specified below.
+
+If any relative paths are specified, they are resolved in relation to the config file's directory.
+
 ## Make Configuration
 
 Make does not have `configure` parameters. As such, the
