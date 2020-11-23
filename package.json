@@ -5,11 +5,13 @@
   "main": "./dist/bundle.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx rollup ./src/index.mjs --format cjs --file ./dist/bundle.js",
+    "build:cli": "npx rollup ./bin/emscripten.mjs --format cjs --file ./dist/emscripten.js --plugin rollup-plugin-preserve-shebang",
+    "build:lib": "npx rollup ./src/index.mjs --format cjs --file ./dist/bundle.js",
+    "build": "npm run build:lib && npm run build:cli",
     "postinstall": "node ./scripts/postinstall.js"
   },
   "bin": {
-    "emscripten": "./bin/emscripten.mjs"
+    "emscripten": "./dist/emscripten.js"
   },
   "repository": {
     "type": "git",
@@ -37,6 +39,7 @@
     "msbuild": "^1.1.3"
   },
   "devDependencies": {
-    "rollup": "^2.33.3"
+    "rollup": "^2.33.3",
+    "rollup-plugin-preserve-shebang": "^1.0.1"
   }
 }
