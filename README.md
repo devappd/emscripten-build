@@ -68,19 +68,21 @@ Your build parameters are listed under `configure`, `build`, and `clean`, corres
 
 ## Installation
 
+Per [Emscripten's prerequisites](https://emscripten.org/docs/getting_started/downloads.html#platform-notes-installation-instructions-sdk), you need to have at least Python 3.6 installed before retrieving this package.
+
+The install command is:
+
 ```sh
 npm install --emsdk='/your/install/path' --save-dev git+https://github.com/marcolovescode/emscripten-build-npm.git
 ```
 
-You may also install this package globally.
+Use the `--emsdk` switch to specify your own install path for the Emscripten SDK. This path is saved to your `npmrc` user config and is referred to every time this package is installed.
 
-The `--emsdk` switch allows you to specify your own install path for EMSDK. This path is saved to your `npmrc` user config and is referred to every time this package is installed. 
+You should specify your own path in order to save disk space. This package may be duplicated across multiple `node_modules` folders and the EMSDK will be installed into each one if you do not specify your own path.
 
-If the path is not specified, this package will warn you that EMSDK will be installed into your `node_modules`. You should specify a path to save disk space across duplicated modules. 
+In addition, if you are running on Windows, this package will warn you that EMSDK installation will fail if your install path is longer than 85 characters. This is a certainty when installing globally with `-g`.
 
-In addition, if you are running on Windows, this package will warn you that EMSDK installation will fail if your install path is longer than 85 characters.
-
-You may also specify an install path as follows:
+In addition to the above switch, you may specify an install path via this command:
 
 ```sh
 npm config set emsdk "/your/install/path"
