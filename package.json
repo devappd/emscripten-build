@@ -7,8 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:cli": "npx rollup ./bin/emscripten.mjs --format cjs --file ./dist/emscripten.js --plugin rollup-plugin-preserve-shebang",
     "build:lib": "npx rollup ./src/index.mjs --format cjs --file ./dist/bundle.js",
-    "build": "npm run build:lib && npm run build:cli",
-    "postinstall": "node ./scripts/postinstall.js"
+    "build": "npm run build:lib && npm run build:cli"
   },
   "bin": {
     "emscripten": "./dist/emscripten.js"
@@ -24,8 +23,7 @@
   },
   "homepage": "https://github.com/devappd/emscripten-build-npm#readme",
   "dependencies": {
-    "@zkochan/npm-conf": "^2.0.1",
-    "emsdk-npm": "git+https://github.com/devappd/emsdk-npm.git#dev",
+    "emsdk-npm": "git+https://github.com/devappd/emsdk-npm.git",
     "get-installed-path": "^4.0.8",
     "jsonc-parser": "^3.0.0",
     "lodash.mergewith": "^4.6.2",
@@ -34,7 +32,7 @@
     "which": "^2.0.2"
   },
   "optionalDependencies": {
-    "cmake-binaries": "git+https://github.com/devappd/cmake-binaries.git#dev",
+    "cmake-binaries": "git+https://github.com/devappd/cmake-binaries.git",
     "ninja-binaries": "^1.10.1",
     "msbuild": "^1.1.3"
   },
