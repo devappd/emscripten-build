@@ -25,7 +25,7 @@
   "homepage": "https://github.com/marcolovescode/emscripten-build-npm#readme",
   "dependencies": {
     "@zkochan/npm-conf": "^2.0.1",
-    "emsdk-npm": "git+https://github.com/marcolovescode/emsdk-npm.git",
+    "emsdk-npm": "git+https://github.com/marcolovescode/emsdk-npm.git#dev",
     "get-installed-path": "^4.0.8",
     "jsonc-parser": "^3.0.0",
     "lodash.mergewith": "^4.6.2",
@@ -34,7 +34,7 @@
     "which": "^2.0.2"
   },
   "optionalDependencies": {
-    "cmake-binaries": "git+https://github.com/marcolovescode/cmake-binaries.git",
+    "cmake-binaries": "git+https://github.com/marcolovescode/cmake-binaries.git#dev",
     "ninja-binaries": "^1.10.1",
     "msbuild": "^1.1.3"
   },
