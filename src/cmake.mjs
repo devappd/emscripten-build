@@ -105,7 +105,7 @@ export default class CMake extends Bootstrap {
 
   async __ensureConfigure() {
     if(!fs.existsSync(path.join(this.config.build.path, "CMakeCache.txt"))) {
-      await this._configure();
+      await this._bindConfigCommand(this._configure);
       // make sure to reload the make variables after configuring
       await this.__determineMake(!!this.config.configure.generator);
     }

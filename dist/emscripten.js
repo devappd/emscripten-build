@@ -551,7 +551,7 @@ class CMake extends Bootstrap {
 
   async __ensureConfigure() {
     if(!fs__default['default'].existsSync(path__default['default'].join(this.config.build.path, "CMakeCache.txt"))) {
-      await this._configure();
+      await this._bindConfigCommand(this._configure);
       // make sure to reload the make variables after configuring
       await this.__determineMake(!!this.config.configure.generator);
     }
@@ -882,7 +882,7 @@ class Configure extends Bootstrap {
       await fs.lstat(path.join(this.config.build.path, "Makefile"));
     }
     catch (e) {
-      await this._configure();
+      await this._bindConfigCommand(this._configure);
     }
   }
 
