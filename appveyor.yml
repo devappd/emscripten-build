@@ -5,17 +5,12 @@ environment:
     - nodejs_version: "15"
     # lts 11/25/2020
     - nodejs_version: "14"
-    - nodejs_version: "11"
-    - nodejs_version: "8"
+    - nodejs_version: "12"
 
 image:
   - macos
   - Visual Studio 2019
   - Ubuntu
-
-matrix:
-  allow_failures:
-    - nodejs_version: "8"
 
 install:
   # Install Node.js
