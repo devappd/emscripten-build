@@ -87,7 +87,7 @@ export default class Configure extends Bootstrap {
       await fs.lstat(path.join(this.config.build.path, "Makefile"));
     }
     catch (e) {
-      await this._configure();
+      await this._bindConfigCommand(this._configure);
     }
   }
 
