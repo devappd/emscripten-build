@@ -5,11 +5,17 @@ node_js:
   - node
   - lts/*
   - 11
+  - 8
 
 os:
   - osx
+  - windows
   - linux
   - windows
+
+jobs:
+  allow_failures:
+    - node_js: 8
 
 dist: focal
 

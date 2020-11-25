@@ -1,0 +1,79 @@
+# Test against the latest version of this Node.js version
+environment:
+  matrix:
+    # stable 11/25/2020
+    - nodejs_version: "15"
+    # lts 11/25/2020
+    - nodejs_version: "14"
+    - nodejs_version: "11"
+    - nodejs_version: "8"
+
+image:
+  - macos
+  - Visual Studio 2019
+  - Ubuntu
+
+matrix:
+  allow_failures:
+    - nodejs_version: "8"
+
+install:
+  # Install Node.js
+  - ps: |
+      If ($env:APPVEYOR_BUILD_WORKER_IMAGE.StartsWith("Visual Studio")) {
+        Install-Product node $env:nodejs_version
+      }
+  - sh: |
+      if [[ ${APPVEYOR_BUILD_WORKER_IMAGE} != "Visual Studio"* ]]; then
+        nvm install $nodejs_version;
+        nvm use $nodejs_version;
+      fi
+
+  # install modules
+  - npm install
+
+test_script:
+  # Output useful info for debugging.
+  - node --version
+  - npm --version
+
+  # run build tests
+  - ps: |
+      If ($env:APPVEYOR_BUILD_WORKER_IMAGE.StartsWith("Visual Studio")) {
+        echo "Build test is running. Output will display when finished..."
+
+        mkdir "$env:APPVEYOR_BUILD_FOLDER\logs"
+
+        $process = Start-Process -FilePath "powershell.exe" -ArgumentList ("-ExecutionPolicy", "Bypass", "-File", "$env:APPVEYOR_BUILD_FOLDER\ci\tests\examples-win.ps1") -PassThru -Wait -NoNewWindow -RedirectStandardOutput "$env:APPVEYOR_BUILD_FOLDER\logs\script_stdout-$env:APPVEYOR_JOB_ID.txt" -RedirectStandardError "$env:APPVEYOR_BUILD_FOLDER\logs\script_stderr-$env:APPVEYOR_JOB_ID.txt"
+
+        Write-Output "########################### STANDARD OUTPUT ############################"
+
+        Get-Content "$env:APPVEYOR_BUILD_FOLDER\logs\script_stdout-$env:APPVEYOR_JOB_ID.txt"
+
+        Write-Output "########################### STANDARD ERROR #############################"
+
+        Get-Content "$env:APPVEYOR_BUILD_FOLDER\logs\script_stderr-$env:APPVEYOR_JOB_ID.txt"
+
+        if ($process.ExitCode -gt 0) {
+          $host.SetShouldExit($process.ExitCode)
+        }
+      }
+  # AppVeyor errors if we "return" in a command.
+  # This is intentional to signify an error code. I don't know how to
+  # trigger failure properly.
+  - sh: |
+      if [[ ${APPVEYOR_BUILD_WORKER_IMAGE} != "Visual Studio"* ]]; then
+        . "$APPVEYOR_BUILD_FOLDER/ci/tests/examples-linux.sh";
+        if [ $? -gt 0 ]; then
+          return $?;
+        fi;
+      fi
+
+# Don't actually build.
+build: off
+
+# Upload logs
+artifacts:
+  - path: logs\**\*
+    name: test logs
+    type: file
