@@ -18,7 +18,12 @@ Write-Host @"
 # At this point, Travis has called NVS and added the Node location
 # as the first element in PATH. The PATH is consistent between
 # PowerShell and Bash.
-$nodePath = "$env:PATH".Split(";")[0]
+if ($env:APPVEYOR -eq $true) {
+    # If AppVeyor, then the PATH is already set
+    $nodePath = ""
+} else {
+    $nodePath = "$("$env:PATH".Split(";")[0])\"
+}
 
 $failed = $false
 $passCount = 0
@@ -45,8 +50,8 @@ foreach ($example in $examples) {
     Remove-Item -Recurse -Force .\dist\*
     
     # Node 11.x does not have npm.ps1, so run CMD
-    Start-Process -FilePath 'cmd.exe' -ArgumentList ("/c", "$nodePath\npm.cmd", 'install', '--emsdk="C:\emsdk"') -Wait -NoNewWindow
-    Start-Process -FilePath 'cmd.exe' -ArgumentList ("/c", "$nodePath\npm.cmd", 'run', 'build') -Wait -NoNewWindow
+    Start-Process -FilePath 'cmd.exe' -ArgumentList ("/c", "$($nodePath)npm.cmd", 'install', '--emsdk="C:\emsdk"') -Wait -NoNewWindow
+    Start-Process -FilePath 'cmd.exe' -ArgumentList ("/c", "$($nodePath)npm.cmd", 'run', 'build') -Wait -NoNewWindow
 
     $countJs = (Get-ChildItem .\dist\*.js | measure).Count
     $countWasm = (Get-ChildItem .\dist\*.wasm | measure).Count
