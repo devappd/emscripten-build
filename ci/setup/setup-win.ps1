@@ -12,16 +12,15 @@ $ourPATH += ";C:\Python39\Scripts"
 
 $env:PATH = "$ourPATH;$env:PATH"
 
-# Install root certificates so that emsdk downloading will work
+# Point Python to root certificates so that emsdk downloading will work
 # See https://github.com/emscripten-core/emscripten/issues/9036
-# See cert links from https://pki.goog/repository
+# Explainer at https://access.redhat.com/articles/2039753
 
-$certFile = New-TemporaryFile
-Invoke-WebRequest -Uri "https://pki.goog/repo/certs/gsr2.pem" -UseBasicParsing -OutFile $certFile.FullName
-Import-Certificate -FilePath $certFile.FullName -CertStoreLocation Cert:\LocalMachine\Root
-
-# In case the above does not work, try this too
+# Alternate cert source: https://pki.goog/repository
+# $certFile = New-TemporaryFile
+# Invoke-WebRequest -Uri "https://pki.goog/repo/certs/gsr2.pem" -UseBasicParsing -OutFile $certFile.FullName
 
 Start-Process -FilePath 'pip' -ArgumentList ('install','certifi') -Wait -NoNewWindow
 $certifiPath = & 'python' -c 'import certifi; print(certifi.where())' | Out-String
-Import-Certificate -FilePath "$certifiPath" -CertStoreLocation Cert:\LocalMachine\Root
+$env:SSL_CERT_FILE = $certifiPath
+
