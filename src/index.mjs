@@ -1,7 +1,7 @@
 import Activate from './activate.mjs';
 import CMake from './cmake.mjs';
 import Make from './make.mjs';
-import Configure from './configure.mjs';
+import Autotools from './autotools.mjs';
 import emsdk from 'emsdk-npm';
 import { GetWorkingConfig } from './config.mjs';
 
@@ -14,8 +14,8 @@ async function _callAction(actionName, a, b) {
       bootstrap = new Make(workingConfig);
       break;
     
-    case 'configure':
-      bootstrap = new Configure(workingConfig);
+    case 'autotools':
+      bootstrap = new Autotools(workingConfig);
       break;
     
     case 'cmake':
