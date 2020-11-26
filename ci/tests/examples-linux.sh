@@ -9,6 +9,16 @@ echo -e "
 ########################################################################
 "
 
+if [ -n "$APPVEYOR" ]; then
+    commit="$APPVEYOR_REPO_COMMIT"
+else
+    commit="$TRAVIS_COMMIT"
+fi
+
+# Assumes package.json value https://github.com/devappd/emscripten-build-npm/archive/master.tar.gz
+EMSCRIPTEN_BUILD_SEARCH="master.tar.gz"
+EMSCRIPTEN_BUILD_REPLACE="$commit.tar.gz"
+
 echo -e "
 ########################################################################
 # Setting up tests...
@@ -29,7 +39,7 @@ cd ~
 git clone https://github.com/devappd/emscripten-npm-examples ./emscripten-npm-examples
 
 cd ./emscripten-npm-examples
-repoRoot=$PWD
+testRepoRoot=$PWD
 
 for example in "${examples[@]}"
 do
@@ -40,12 +50,20 @@ do
 ########################################################################
 "
 
-    cd "$repoRoot/$example"
+    cd "$testRepoRoot/$example"
+
+    # Replace dependency in package.json
+    # -i.bak makes this call compatible with both Mac and Linux
+    sed -i.bak "s@${EMSCRIPTEN_BUILD_SEARCH}@${EMSCRIPTEN_BUILD_REPLACE}@" "$testRepoRoot/$example/package.json"
+
+    # Clean the committed build output folder
     rm -rf ./dist/*
     
+    # Setup environment
     npm install --emsdk="$HOME/emsdk"
     npm run build
 
+    # Count build outputs
     # https://stackoverflow.com/a/33891876
     cd ./dist
     countJs=$(ls 2>/dev/null -Ubad1 -- *.js | wc -l)

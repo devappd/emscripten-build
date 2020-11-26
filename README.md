@@ -25,14 +25,9 @@ emscripten.build()
 
 ## Configuration
 
-This package reads parameters from these locations:
+You set your build parameters in a file named `emscripten.build.json`. A simple configuration file may look like this:
 
-* `<your_module>/emscripten.build.json`
-* `<current_working_dir>/emscripten.build.json`.
-
-A simple configuration file may look like this:
-
-```js
+```json
 {
     "myProject": {
         "type": "cmake",
@@ -51,21 +46,21 @@ A simple configuration file may look like this:
 }
 ```
 
-See later in this document for the configuration format.
+You may set different parameters for the `configure`, `build`, and `clean` steps. See later in this document for the configuration format.
 
 ## Installation
 
-Per [Emscripten's prerequisites](https://emscripten.org/docs/getting_started/downloads.html#platform-notes-installation-instructions-sdk), you must have at least Python 3.6 installed before retrieving this package. You may download at [python.org](https://www.python.org/downloads/), or refer to your OS's package manager.
+Before you install this package, you must have at least Python 3.6 on your system. You may download it at [python.org](https://www.python.org/downloads/), or refer to your OS's package manager.
 
-This package works with Node.js 12.x or later. If you have any issues with the environment, you may refer to [issue #15](https://github.com/devappd/emscripten-build-npm/issues/15) for guidance.
+This package works with Node.js 12.x or later.
 
 The install command is:
 
 ```sh
-npm install --emsdk='/your/install/path' --save-dev git+https://github.com/devappd/emscripten-build-npm.git
+npm install --emsdk='/your/custom/install/path' --save-dev git+https://github.com/devappd/emscripten-build-npm.git
 ```
 
-Use the `--emsdk` switch to specify your own install path for the Emscripten SDK. This path is saved to your `npmrc` user config and is referred to every time this package is installed.
+Use the `--emsdk` switch to specify your own install path for the Emscripten SDK. This path is saved to your `npmrc` user config and it is referred to every time this package is installed.
 
 You should specify your own path in order to save disk space across duplicate `node_modules` installations. If you are running on Windows, the installation will fail if the install path is longer than 85 characters (per [emsdk#152](https://github.com/emscripten-core/emsdk/issues/152)). This is a certainty if you install globally with `-g`.
 
@@ -89,6 +84,8 @@ Usage of `make`, `configure`, `mingw32-make`, and any other build toolset, will
 require you to install those systems by yourself. Have those commands available
 in your PATH.
 
+If you have any issues with the environment, you may refer to [issue #15](https://github.com/devappd/emscripten-build-npm/issues/15) and [Emscripten's prerequisites](https://emscripten.org/docs/getting_started/downloads.html#platform-notes-installation-instructions-sdk) for guidance.
+
 ## Command Line Usage
 
 In all commands, `config_name` is optional and refers to the name of your config in
@@ -100,13 +97,13 @@ will be selected.
 
 | Command | Description
 | ------- | -----------
-| `emscripten configure [config_name]` | Configure the project.
-| `emscripten build [config_name]` | Build the project and configure it first if necessary.
-| `emscripten clean [config_name]` | Reset the project's build directories.
-| `emscripten reconfigure [config_name]` | Clean the project then configure it.
-| `emscripten rebuild [config_name]` | Clean the project, configure it, then build.
-| `emscripten compile [config_name]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
-| `emscripten run <command> [arg...]` | Runs a given command under the context of the EMSDK environment.
+| `npx emscripten configure [config_name]` | Configure the project.
+| `npx emscripten build [config_name]` | Build the project and configure it first if necessary.
+| `npx emscripten clean [config_name]` | Reset the project's build directories.
+| `npx emscripten reconfigure [config_name]` | Clean the project then configure it.
+| `npx emscripten rebuild [config_name]` | Clean the project, configure it, then build.
+| `npx emscripten compile [config_name]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
+| `npx emscripten run <command> [arg...]` | Runs a given command under the context of the EMSDK environment.
 
 ## JavaScript Usage
 
@@ -126,10 +123,10 @@ This package also supplies JavaScript bindings for the above commands:
 
 For all methods, both parameters are optional.
 
-* `configName` -- Selects the named config in your `emscripten.build.json`. Defaults to the `default`
-name specified in that file, or the sole config if there's only one listed.
-
-* `customConfig` -- An object fragment with properties to overwrite on your selected config. This performs a deep merge on your selected config using this fragment.
+| Parameter    | Description |
+| ------------ | ------------|
+| `configName` | Selects the named config in your `emscripten.build.json`. Defaults to the `default` name specified in that file, or the sole config if there's only one listed.
+| `customConfig` | An object fragment with properties to overwrite on your selected config. This performs a deep merge on your selected config using this fragment.
 
 Calling these methods will perform the action and return a Promise that yields a Bootstrap object.
 On the Bootstrap object, you can chain multiple calls while reusing the same config.
@@ -194,8 +191,7 @@ emscripten.build()
 
 ## Configuration Files
 
-The below describes the parameters you can set for the `configure`, `build`, and `clean` steps. Specify each
-of these in your config.
+The below describes the parameters you can set for your build steps: `configure`, `build`, and `clean`.
 
 Note that the only required parameter is `your_config["configure"]["path"]` (or `your_config["build"]["path"]` for Make.)
 The other parameters have defaults as specified below.
@@ -204,7 +200,12 @@ If any relative paths are specified, they are resolved in relation to the config
 
 ## Top-Level
 
-The config file `emscripten.build.json` is saved into your project's root folder. It lists some top-level fields such as `emsdkVersion`, `default`, and your project's build configurations.
+Your config file will be searched at these locations:
+
+* `<your_module>/emscripten.build.json`
+* `<current_working_dir>/emscripten.build.json`.
+
+The config file lists some top-level fields such as `emsdkVersion`, `default`, and your project's build configurations.
 
 In this top-level object, you may list multiple configurations by name:
 
@@ -240,8 +241,6 @@ In this top-level object, you may list multiple configurations by name:
     }
 }
 ```
-
-Your build parameters are listed under `configure`, `build`, and `clean`, corresponding to that specific build step. The fields change depending on your toolset.
 
 ## Make Configuration
 
@@ -289,7 +288,7 @@ Make does not have `configure` parameters. As such, the
 
     "configure": {
         // Path to your source directory which contains ./configure. Required.
-        "path": "/path/to/dir/with/CMakeLists",
+        "path": "/path/to/dir/with/configure",
 
         // Command line arguments to pass to ./configure.
         // Default: []
