@@ -7,12 +7,6 @@ Write-Output @"
 ########################################################################
 "@
 
-Write-Host @"
-########################################################################
-# Setting up tests...
-########################################################################
-"@
-
 # Windows can't find NPM without the full path.
 #
 # At this point, Travis has called NVS and added the Node location
@@ -21,9 +15,21 @@ Write-Host @"
 if ($env:APPVEYOR -eq $true) {
     # If AppVeyor, then the PATH is already set
     $nodePath = ""
+    $commit="$env:APPVEYOR_REPO_COMMIT"
 } else {
     $nodePath = "$("$env:PATH".Split(";")[0])\"
+    $commit="$env:TRAVIS_COMMIT"
 }
+
+# Assumes package.json value https://github.com/marcolovescode/emscripten-build-npm/archive/master.tar.gz
+$EMSCRIPTEN_BUILD_SEARCH = "master.tar.gz"
+$EMSCRIPTEN_BUILD_REPLACE = "$commit.tar.gz"
+
+Write-Host @"
+########################################################################
+# Setting up tests...
+########################################################################
+"@
 
 $failed = $false
 $passCount = 0
@@ -37,7 +43,7 @@ $examples = @(
 Start-Process -FilePath 'git' -ArgumentList ('clone','https://github.com/marcolovescode/emscripten-npm-examples') -Wait -NoNewWindow
 
 Set-Location .\emscripten-npm-examples
-$repoRoot = (Get-Location).Path
+$testRepoRoot = (Get-Location).Path
 
 foreach ($example in $examples) {
     Write-Output @"
@@ -46,13 +52,20 @@ foreach ($example in $examples) {
 ########################################################################
 "@
 
-    Set-Location "$repoRoot\$example"
+    Set-Location "$testRepoRoot\$example"
+
+    # Replace dependency in package.json
+    $packageJson = "$testRepoRoot\$example\package.json"
+    (Get-Content "$packageJson" -Raw).replace("$EMSCRIPTEN_BUILD_SEARCH", "$EMSCRIPTEN_BUILD_REPLACE") | Set-Content "$packageJson"
+
+    # Clean the committed build output folder
     Remove-Item -Recurse -Force .\dist\*
     
     # Node 11.x does not have npm.ps1, so run CMD
     Start-Process -FilePath 'cmd.exe' -ArgumentList ("/c", "$($nodePath)npm.cmd", 'install', '--emsdk="C:\emsdk"') -Wait -NoNewWindow
     Start-Process -FilePath 'cmd.exe' -ArgumentList ("/c", "$($nodePath)npm.cmd", 'run', 'build') -Wait -NoNewWindow
 
+    # Count build outputs
     $countJs = (Get-ChildItem .\dist\*.js | measure).Count
     $countWasm = (Get-ChildItem .\dist\*.wasm | measure).Count
     $hasArtifacts = ($countJs -eq 1 -and $countWasm -eq 1)
