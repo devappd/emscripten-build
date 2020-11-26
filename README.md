@@ -224,7 +224,7 @@ In this top-level object, you may list multiple configurations by name:
 
     "named_config": {
         // Selects the build toolset to use. Required.
-        // Possible values: "make"|"configure"|"cmake"
+        // Possible values: "make"|"autotools"|"cmake"
         "type": "cmake",
 
         "configure": { /* ... */ },
@@ -278,13 +278,13 @@ Make does not have `configure` parameters. As such, the
 }
 ```
 
-## `./configure` Configuration
+## Autotools Configuration
 
 ### Configure
 
 ```js
 {
-    "type": "configure",
+    "type": "autotools",
 
     "configure": {
         // Path to your source directory which contains ./configure. Required.

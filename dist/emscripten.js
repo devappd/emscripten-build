@@ -798,7 +798,7 @@ class Make extends Bootstrap {
   }
 }
 
-class Configure extends Bootstrap {
+class Autotools extends Bootstrap {
   constructor(workingConfig) {
     super(workingConfig);
 
@@ -1092,7 +1092,7 @@ function GetWorkingConfig(a, b) {
   // A config object must have a build type.
   // This also catches empty configs.
   if (!('type' in workingConfig))
-    throw new RangeError(`Base config ${baseConfigKey} does not have a valid build type. Specify "type": <"make"|"configure"|"cmake"> in the base config.`);
+    throw new RangeError(`Base config ${baseConfigKey} does not have a valid build type. Specify "type": <"make"|"autotools"|"cmake"> in the base config.`);
 
   // Move EMSDK variables to final config, unless the final config already has them
   if (emsdkPath && !('emsdk' in workingConfig))
@@ -1116,8 +1116,8 @@ async function _callAction(actionName, a, b) {
       bootstrap = new Make(workingConfig);
       break;
     
-    case 'configure':
-      bootstrap = new Configure(workingConfig);
+    case 'autotools':
+      bootstrap = new Autotools(workingConfig);
       break;
     
     case 'cmake':

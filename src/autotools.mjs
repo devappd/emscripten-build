@@ -3,7 +3,7 @@ import emsdk from 'emsdk-npm';
 import { checkMakeInstalled, makeCommand } from './environment.mjs';
 import { TryResolvePath } from './utils.mjs';
 
-export default class Configure extends Bootstrap {
+export default class Autotools extends Bootstrap {
   constructor(workingConfig) {
     super(workingConfig);
 
