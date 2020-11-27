@@ -25,7 +25,6 @@
   "dependencies": {
     "emsdk-npm": "https://github.com/devappd/emsdk-npm/archive/master.tar.gz",
     "get-installed-path": "^4.0.8",
-    "jsonc-parser": "^3.0.0",
     "lodash.mergewith": "^4.6.2",
     "resolve-path": "^1.4.0",
     "shelljs": "^0.8.4",

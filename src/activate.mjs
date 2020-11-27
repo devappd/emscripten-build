@@ -6,25 +6,22 @@ import emsdk from 'emsdk-npm';
 let _installed = [];
 let _active = null;
 
-export default function Activate(version = 'latest') {
+export default async function ActivateEmSDK(version = 'latest') {
   if (_active === version)
-    return Promise.resolve();
+    return;
 
   // Update and install if we haven't yet activated `version` in this
   // runtime session.
-  // This does not "reinstall" a version forcibly.
-  if (!_installed.includes(version))
-    return emsdk.update()
-    .then(_ => emsdk.install(version))
-    .then(_ => {
-      _installed.push(version);
-      return emsdk.activate(version);
-    })
-    .then(_ => { _active = version });
-
-  // Else, we're installed, but switching between activated versions.
+  // This does not "reinstall" a version forcibly, as it checks whether
+  // the version files already exist.
+  if (!_installed.includes(version)) {
+    await emsdk.update();
+    await emsdk.install(version);
+    _installed.push(version);
+  }
+  
+  // Switch to `version`.
   // Note we cannot have more than one version activated at the same time.
-  else
-    return emsdk.activate(version)
-    .then(_ => { _active = version });
+  await emsdk.activate(version);
+  _active = version;
 }

@@ -25,78 +25,67 @@ export default class CMake extends Bootstrap {
     this.__validateConfigureConfig();
     this.__validateBuildConfig();
     this.__validateCleanConfig();
+    this.__validateInstallConfig();
     this._validateEmsdkConfig();
   }
 
   __validateConfigureConfig() {
     if (!('configure' in this.config)
         || !('path' in this.config.configure))
-      throw new RangeError('Configure config must have configure.path set to your source directory (which contains ./configure).');
+      throw new RangeError('Configure config must have configure.path set to your source directory (which contains CMakeLists.txt).');
     else
       this.config.configure.path = TryResolvePath(this.config.configure.path, this.config._configPath);
 
-    if (!('cachePath' in this.config.configure)
-        || !this.config.configure.cachePath)
-      this.config.configure.cachePath = path.join(MainModuleDir(), 'build');
-    else
-      this.config.configure.cachePath = TryResolvePath(this.config.configure.cachePath, this.config._configPath);
-
-      if (!('generator' in this.config.configure)
-        || !this.config.configure.generator)
+    if (!this.config.configure.generator)
       this.config.configure.generator = 'Ninja';
 
-      if (!('type' in this.config.configure)
-        || !this.config.configure.type)
+    if (!this.config.configure.type)
       this.config.configure.type = 'Release';
 
-      if (!('outputPath' in this.config.configure)
-        || !this.config.configure.outputPath)
-      this.config.configure.outputPath = this.config.configure.cachePath;
-    else
-      this.config.configure.outputPath = TryResolvePath(this.config.configure.outputPath, this.config._configPath);
-
-    if (!('arguments' in this.config.configure)
-        || !this.config.configure.arguments)
+    if (!this.config.configure.arguments)
       this.config.configure.arguments = [];
     else if (!Array.isArray(this.config.configure.arguments))
       this.config.configure.arguments = [this.config.configure.arguments];
   }
 
+  __validateMakeConfig(configKey, targetName = null, defaultPath = null) {
+    if (!(configKey in this.config))
+      this.config[configKey] = {};
+
+    if (defaultPath && !this.config[configKey].path)
+      this.config[configKey].path = defaultPath;
+    
+    if (this.config[configKey].path)
+      this.config[configKey].path = TryResolvePath(this.config[configKey].path, this.config._configPath);
+
+    if (!this.config[configKey].target)
+      this.config[configKey].target = targetName;
+
+    if (!this.config[configKey].arguments)
+      this.config[configKey].arguments = [];
+    else if (!Array.isArray(this.config[configKey].arguments))
+      this.config[configKey].arguments = [this.config[configKey].arguments];
+  }
+
   __validateBuildConfig() {
-    if (!('build' in this.config))
-      this.config.build = {};
-
-    if (!('path' in this.config.build)
-        || !this.config.build.path)
-      this.config.build.path = this.config.configure.cachePath;
-    else
-      this.config.build.path = TryResolvePath(this.config.build.path, this.config._configPath);
-
-    if (!('target' in this.config.build))
-      this.config.build.target = null;
-
-    if (!('arguments' in this.config.build)
-        || !this.config.build.arguments)
-      this.config.build.arguments = [];
-    else if (!Array.isArray(this.config.build.arguments))
-      this.config.build.arguments = [this.config.build.arguments];
+    this.__validateMakeConfig('build', null, './build');
   }
 
   __validateCleanConfig() {
-    if (!('clean' in this.config))
-      this.config.clean = {};
+    this.__validateMakeConfig('clean', 'clean');
+  }
 
-    if (!('paths' in this.config.clean)
-        || !this.config.clean.paths)
-      this.config.clean.paths = [this.config.configure.cachePath];
-    else {
-      if (!Array.isArray(this.config.clean.paths))
-        this.config.clean.paths = [this.config.clean.paths];
+  __validateInstallConfig() {
+    this.__validateMakeConfig('install', 'install', './dist');
 
-      this.config.clean.paths = this.config.clean.paths.map((currentValue) => {
-        return TryResolvePath(currentValue, this.config._configPath);
-      });
-    }
+    if (this.config.install.binaryPath)
+      this.config.install.binaryPath = TryResolvePath(this.config.install.binaryPath, this.config._configPath);
+
+    if (this.config.install.libraryPath)
+      this.config.install.libraryPath = TryResolvePath(this.config.install.libraryPath, this.config._configPath);
+
+    if (this.config.install.includePath)
+      this.config.install.includePath = TryResolvePath(this.config.install.includePath, this.config._configPath);
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -112,15 +101,25 @@ export default class CMake extends Bootstrap {
   }
 
   __buildConfigureArguments() {
-    return [
+    let args = [
       this.config.configure.path,
       '-G', this.config.configure.generator,
       `-DCMAKE_BUILD_TYPE="${this.config.configure.type}"`,
-      `-DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${this.config.configure.outputPath}"`,
-      `-DCMAKE_LIBRARY_OUTPUT_DIRECTORY="${this.config.configure.outputPath}"`,
-      `-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="${this.config.configure.outputPath}"`,
-      ...this.config.configure.arguments
+      `-DCMAKE_INSTALL_PREFIX="${this.config.install.path}"`,
     ];
+
+    if (this.config.install.binaryPath)
+      args.push(`-DCMAKE_INSTALL_BINDIR="${this.config.install.binaryPath}"`);
+
+    if (this.config.install.libraryPath)
+      args.push(`-DCMAKE_INSTALL_LIBDIR="${this.config.install.libraryPath}"`);
+
+    if (this.config.install.includePath)
+      args.push(`-DCMAKE_INSTALL_INCLUDEDIR="${this.config.install.includePath}"`);
+
+    args.push(...this.config.configure.arguments);
+
+    return args;
   }
 
   // Populate this.makeCommand
@@ -188,34 +187,48 @@ export default class CMake extends Bootstrap {
 
     await emsdk.run(this.configCommand,
       [this.configSubCommand, ...args],
-      {cwd: this.config.configure.cachePath, shell: (process.platform === 'win32')}
+      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
     );
   }
 
-  async _build() {
+  async __make(subconfig) {
     // Make sure everything's configured before building.
     await this.__ensureConfigure();
 
     // build args
     let args;
-    if (this.config.build.target)
-      args = [this.config.build.target, ...this.config.build.arguments];
+    if (subconfig.target)
+      args = [subconfig.target, ...subconfig.arguments];
     else
-      args = [...this.config.build.arguments];
+      args = [...subconfig.arguments];
 
     // note we do not use this.makeSubCommand because
     // we call the makeCommand directly instead of thru
     // an emsdk script.
+    //
+    // Make is called on the build path specifically.
     await emsdk.run(this.makeCommand, args,
       {cwd: this.config.build.path, shell: (process.platform === 'win32')}
     );
+  }
+
+  async _build() {
+    await this.__make(this.config.build);
+  }
+
+  async _clean() {
+    await this.__make(this.config.clean);
+  }
+
+  async _install() {
+    await this.__make(this.config.install);
   }
 
 ////////////////////////////////////////////////////////////////////////
 // Binding Helpers
 ////////////////////////////////////////////////////////////////////////
 
-  __ensureMakeDirExists() {
+  __ensureBuildDirExists() {
     let result = shelljs.mkdir('-p', this.config.build.path);
     if (result.code !== 0)
       throw new Error(result.stderr);
@@ -226,7 +239,7 @@ export default class CMake extends Bootstrap {
     await environment.checkCMakeInstalled();
     this.configSubCommand = environment.cMakeCommand;
 
-    this.__ensureMakeDirExists();
+    this.__ensureBuildDirExists();
 
     return this._bindCommand(impl, ...args);
   }
@@ -235,7 +248,7 @@ export default class CMake extends Bootstrap {
     // Throws error if build command is not found.
     await this.__determineMake(!!this.config.configure.generator);
     
-    this.__ensureMakeDirExists();
+    this.__ensureBuildDirExists();
 
     return this._bindCommand(impl, ...args);
   }
@@ -247,7 +260,7 @@ export default class CMake extends Bootstrap {
 
     await this.__determineMake(!!this.config.configure.generator);
 
-    this.__ensureMakeDirExists();
+    this.__ensureBuildDirExists();
 
     return this._bindCommand(impl, ...args);
   }

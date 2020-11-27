@@ -20,7 +20,21 @@ export default class Make extends Bootstrap {
   __validateConfig() {
     this.__validateBuildConfig();
     this.__validateCleanConfig();
+    this.__validateInstallConfig();
     this._validateEmsdkConfig();
+  }
+
+  __validateMakeConfig(configKey, targetName = null) {
+    if (!(configKey in this.config))
+      this.config[configKey] = {};
+
+    if (!('target' in this.config[configKey]))
+      this.config[configKey].target = targetName;
+
+    if (!this.config[configKey].arguments)
+      this.config[configKey].arguments = [];
+    else if (!Array.isArray(this.config[configKey].arguments))
+      this.config[configKey].arguments = [this.config[configKey].arguments];
   }
 
   __validateBuildConfig() {
@@ -30,31 +44,15 @@ export default class Make extends Bootstrap {
     else
       this.config.build.path = TryResolvePath(this.config.build.path, this.config._configPath);
     
-    if (!('target' in this.config.build))
-      this.config.build.target = null;
-
-    if (!('arguments' in this.config.build)
-        || !this.config.build.arguments)
-      this.config.build.arguments = [];
-    else if (!Array.isArray(this.config.build.arguments))
-      this.config.build.arguments = [this.config.build.arguments];
+    this.__validateMakeConfig('build', null);
   }
 
   __validateCleanConfig() {
-    if (!('clean' in this.config))
-      this.config.clean = {};
+    this.__validateMakeConfig('clean', 'clean');
+  }
 
-    if (!('paths' in this.config.clean)
-        || !this.config.clean.paths)
-      this.config.clean.paths = [];
-    else {
-      if (!Array.isArray(this.config.clean.paths))
-        this.config.clean.paths = [this.config.clean.paths];
-
-      this.config.clean.paths = this.config.clean.paths.map((currentValue) => {
-        return TryResolvePath(currentValue, this.config._configPath);
-      });
-    }
+  __validateInstallConfig() {
+    this.__validateMakeConfig('install', 'install');
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -65,17 +63,30 @@ export default class Make extends Bootstrap {
     // Nothing to do, make is not configurable
   }
 
-  async _build() {
+  async __make(subconfig) {
     // build args
     let args;
-    if (this.config.build.target)
-      args = [this.makeSubCommand, this.config.build.target, ...this.config.build.arguments];
+    if (subconfig.target)
+      args = [this.makeSubCommand, subconfig.target, ...subconfig.arguments];
     else
-      args = [this.makeSubCommand, ...this.config.build.arguments];
+      args = [this.makeSubCommand, ...subconfig.arguments];
 
+    // Make is called on the "build" path specifically.
     await emsdk.run(this.makeCommand, args,
       {cwd: this.config.build.path, shell: (process.platform === 'win32')}
     );
+  }
+
+  async _build() {
+    await this.__make(this.config.build);
+  }
+
+  async _clean() {
+    await this.__make(this.config.clean);
+  }
+
+  async _install() {
+    await this.__make(this.config.install);
   }
 
 ////////////////////////////////////////////////////////////////////////

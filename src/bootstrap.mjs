@@ -1,5 +1,5 @@
 import path from 'path';
-import Activate from './activate.mjs';
+import ActivateEmSDK from './activate.mjs';
 import emsdk from 'emsdk-npm';
 import shell from 'shelljs';
 import fs from 'fs';
@@ -38,34 +38,11 @@ export default class Bootstrap {
   }
 
   async _clean() {
-    let cleanDirs = [...this.config.clean.paths];
+    throw new Error('Bootstrap::_clean() not implemented by the subclass.')
+  }
 
-    if (cleanDirs.length < 1) {
-      console.warn('bootstrap::clean() has no paths to clean up. Your build will not be cleaned!');
-      return this;
-    }
-
-    for (const dir of cleanDirs) {
-      if (!dir)
-        continue;
-
-      let rmDir = path.resolve(dir);
-
-      if (!fs.lstatSync(rmDir).isDirectory()) {
-        console.warn(`Dir ${rmDir} is not a directory. Skipping...`);
-        continue;
-      }
-
-      console.log(`Cleaning dir ${rmDir}...`);
-
-      try {
-        shell.rm('-rf', path.join(rmDir, '*'));
-      } catch(e) {
-        console.warn(`Could not clean ${rmDir}`, e.message);
-      }
-    }
-
-    return this;
+  async _install() {
+    throw new Error('Bootstrap::_install() not implemented by the subclass.')
   }
 
   async _reconfigure() {
@@ -95,7 +72,7 @@ export default class Bootstrap {
   async __preCommand() {
     // emsdkVersion defaults to 'latest' and is guaranteed to be
     // in this.config
-    await Activate(this.config.emsdkVersion);
+    await ActivateEmSDK(this.config.emsdkVersion);
   }
 
   async _bindCommand(impl, ...args) {
@@ -135,10 +112,14 @@ export default class Bootstrap {
     return this.build();
   }
 
-  // Subclasses should not need to implement this, but may do
-  // so for special handling.
+  // Must be implemented by subclass
   async clean() {
-    return this._clean();
+    return this._bindMakeCommand(this._clean);
+  }
+
+  // Must be implemented by subclass
+  async install() {
+    return this._bindMakeCommand(this._install);
   }
 
   // Subclasses should not define these meta-commands.

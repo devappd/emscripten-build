@@ -1,4 +1,4 @@
-import Activate from './activate.mjs';
+import ActivateEmSDK from './activate.mjs';
 import CMake from './cmake.mjs';
 import Make from './make.mjs';
 import Autotools from './autotools.mjs';
@@ -6,7 +6,7 @@ import emsdk from 'emsdk-npm';
 import { GetWorkingConfig } from './config.mjs';
 
 async function _callAction(actionName, a, b) {
-  let workingConfig = GetWorkingConfig(a, b);
+  let workingConfig = await GetWorkingConfig(a, b);
 
   let bootstrap;
   switch (workingConfig.type.toLowerCase()) {
@@ -54,6 +54,15 @@ export async function clean(a, b) {
 }
 
 /**
+ * Install the C/C++ project with a given config.
+ * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ */
+export async function install(a, b) {
+  return _callAction('install', a, b);
+}
+
+/**
  * Clean then configure the C/C++ project with a given config.
  * @param {string} [configName] - The name of a sub-config to use from the base config.
  * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
@@ -85,24 +94,24 @@ export async function compile(a, b) {
  * @param {string} [configName] - The name of a sub-config to use from the base config.
  * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
  */
-export async function install(a, b) {
+export async function installSDK(a, b) {
   throw new Error('emscripten-build::install() is not yet implemented.');
 
   // let workingConfig = GetWorkingConfig(a, b);
   
   // if (workingConfig) {
   //   // Do emsdk and emsdkVersion exist in this object?
-  //   // Retrieve defaults then Activate(version, path)
+  //   // Retrieve defaults then ActivateEmSDK(version, path)
   // }
 }
 
 /**
  * Run an arbitrary command within the EMSDK environment.
- * @param {string} command - The name of a sub-config to use from the base config.
+ * @param {string} command - The executable name of the command.
  * @param {string[]} [args=[]] - Command line arguments
  * @param {object} [opts=[]] - Options to pass to child_process.spawn()
  */
 export async function run(command, args = [], opts = {}) {
-  await Activate();
+  await ActivateEmSDK();
   return emsdk.run(command, args, opts);
 }

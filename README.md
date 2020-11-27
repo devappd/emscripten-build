@@ -25,28 +25,34 @@ emscripten.build()
 
 ## Configuration
 
-You set your build parameters in a file named `emscripten.build.json`. A simple configuration file may look like this:
+You set your build parameters in a file named `emscripten.config.js`. A simple configuration file may look like this:
 
-```json
-{
+```js
+module.exports = {
     "myProject": {
         "type": "cmake",
 
         "configure": {
             "path": "./src",
-            "cachePath": "./build",
             "generator": "Ninja",
             "type": "Release",
-            "outputPath": "./dist",
             "arguments": [
                 "-DDEFINE1=\"Value1\""
             ]
+        },
+
+        "build": {
+            "path": "./build"
+        },
+
+        "install": {
+            "path": "./dist"
         }
     }
 }
 ```
 
-You may set different parameters for the `configure`, `build`, and `clean` steps. See later in this document for the configuration format.
+You may set different parameters for the `configure`, `build`, `install`, and `clean` steps. See later in this document for the configuration format.
 
 ## Installation
 
@@ -89,17 +95,18 @@ If you have any issues with the environment, you may refer to [issue #15](https:
 ## Command Line Usage
 
 In all commands, `config_name` is optional and refers to the name of your config in
-`emscripten.build.json`.
+`emscripten.config.js`.
 
 If `config_name` is not specified, it defaults to the `default` name specified in
-`emscripten.build.json`. Or, if there's only one config specified, then that sole config
+`emscripten.config.js`. Or, if there's only one config specified, then that sole config
 will be selected.
 
 | Command | Description
 | ------- | -----------
 | `npx emscripten configure [config_name]` | Configure the project.
 | `npx emscripten build [config_name]` | Build the project and configure it first if necessary.
-| `npx emscripten clean [config_name]` | Reset the project's build directories.
+| `npx emscripten clean [config_name]` | Reset the project's build files.
+| `npx emscripten install [config_name]` | Copy the project's build output into a target directory.
 | `npx emscripten reconfigure [config_name]` | Clean the project then configure it.
 | `npx emscripten rebuild [config_name]` | Clean the project, configure it, then build.
 | `npx emscripten compile [config_name]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
@@ -115,6 +122,8 @@ This package also supplies JavaScript bindings for the above commands:
 
 * `emscripten.clean(configName, customConfig)`
 
+* `emscripten.install(configName, customConfig)`
+
 * `emscripten.reconfigure(configName, customConfig)`
 
 * `emscripten.rebuild(configName, customConfig)`
@@ -125,7 +134,7 @@ For all methods, both parameters are optional.
 
 | Parameter    | Description |
 | ------------ | ------------|
-| `configName` | Selects the named config in your `emscripten.build.json`. Defaults to the `default` name specified in that file, or the sole config if there's only one listed.
+| `configName` | Selects the named config in your `emscripten.config.js`. Defaults to the `default` name specified in that file, or the sole config if there's only one listed.
 | `customConfig` | An object fragment with properties to overwrite on your selected config. This performs a deep merge on your selected config using this fragment.
 
 Calling these methods will perform the action and return a Promise that yields a Bootstrap object.
@@ -191,9 +200,9 @@ emscripten.build()
 
 ## Configuration Files
 
-The below describes the parameters you can set for your build steps: `configure`, `build`, and `clean`.
+The below describes the parameters you can set for your build steps: `configure`, `build`, `install`, and `clean`.
 
-Note that the only required parameter is `your_config["configure"]["path"]` (or `your_config["build"]["path"]` for Make.)
+Note that the only required parameters are `your_config["type"]` and `your_config["configure"]["path"]` (for Makefile, `your_config["build"]["path"]` is used instead.)
 The other parameters have defaults as specified below.
 
 If any relative paths are specified, they are resolved in relation to the config file's directory.
@@ -202,15 +211,15 @@ If any relative paths are specified, they are resolved in relation to the config
 
 Your config file will be searched at these locations:
 
-* `<your_module>/emscripten.build.json`
-* `<current_working_dir>/emscripten.build.json`.
+* `<your_module>/emscripten.config.js`
+* `<current_working_dir>/emscripten.config.js`.
 
 The config file lists some top-level fields such as `emsdkVersion`, `default`, and your project's build configurations.
 
 In this top-level object, you may list multiple configurations by name:
 
 ```js
-{
+module.exports = {
     // Selects the EMSDK version to use.
     // Default: "latest"
     "emsdkVersion": "latest",
@@ -229,7 +238,8 @@ In this top-level object, you may list multiple configurations by name:
 
         "configure": { /* ... */ },
         "build": { /* ... */ },
-        "clean": { /* ... */ },
+        "install": { /* ... */ },
+        "clean": { /* ... */ }
     },
 
     "other_named_config": {
@@ -237,7 +247,8 @@ In this top-level object, you may list multiple configurations by name:
 
         "configure": { /* ... */ },
         "build": { /* ... */ },
-        "clean": { /* ... */ },
+        "install": { /* ... */ },
+        "clean": { /* ... */ }
     }
 }
 ```
@@ -266,14 +277,24 @@ Make does not have `configure` parameters. As such, the
         ]
     },
 
-    "clean": {
-        // List of paths to clean, e.g., obj and bin directories.
+    "install": {
+        // Target to pass to Make
+        // Default: "install"
+        "target": "targetName",
+
+        // Arguments to pass to Make
         // Default: []
-        "paths": [
-            "/path/to/clean/1",
-            "/path/to/clean/2",
-            /* ... */
-        ]
+        "arguments": [ /* ... */ ]
+    },
+
+    "clean": {
+        // Target to pass to Make
+        // Default: "clean"
+        "target": "targetName",
+
+        // Arguments to pass to Make
+        // Default: []
+        "arguments": [ /* ... */ ]
     }
 }
 ```
@@ -299,9 +320,9 @@ Make does not have `configure` parameters. As such, the
     },
 
     "build": {
-        // Path which contains Makefile.
-        // Default: config["configure"]["path"]
-        "path": "/path/to/dir/with/Makefile",
+        // Path to store Makefile and build cache
+        // Default: <config_dir>/build
+        "path": "/path/to/build/cache",
 
         // Target to pass to Make
         // Default: None
@@ -314,14 +335,35 @@ Make does not have `configure` parameters. As such, the
         ]
     },
 
-    "clean": {
-        // List of paths to clean, e.g., obj and bin directories.
+    "install": {
+        // Path to install executables to.
+        // Default: <config_dir>/dist
+        "path": "/path/to/install/destination",
+
+        // Paths to install artifacts.
+        // Relative paths are resolved to the config file directory, as normal.
+        // Default: <install_path>/bin (lib, include...)
+        "binaryPath": "/path/to/install/bin",
+        "libraryPath": "/path/to/install/lib",
+        "includePath": "/path/to/install/include",
+
+        // Target to pass to Make
+        // Default: "install"
+        "target": "targetName",
+
+        // Arguments to pass to Make
         // Default: []
-        "paths": [
-            "/path/to/clean/1",
-            "/path/to/clean/2",
-            /* ... */
-        ]
+        "arguments": [ /* ... */ ]
+    },
+
+    "clean": {
+        // Target to pass to Make
+        // Default: "clean"
+        "target": "targetName",
+
+        // Arguments to pass to Make
+        // Default: []
+        "arguments": [ /* ... */ ]
     }
 }
 ```
@@ -338,23 +380,15 @@ Make does not have `configure` parameters. As such, the
         // Path to your source directory which contains CMakeLists.txt. Required.
         "path": "/path/to/dir/with/CMakeLists",
 
-        // Path to your CMake cache directory.
-        // Default: <your_module>/build
-        "cachePath": "/path/to/cache/dir",
-
-        // Type of build files to generate. Specify as if you were passing to -G to CMake.
+        // Type of build files to generate. Specify as if you were passing -G to CMake.
         // Default: "Ninja"
-        // Possible values: "Ninja"|"* Makefiles"|"Visual Studio *"
+        // Possible values: "Ninja"|"Unix Makefiles"|"Visual Studio 16"|etc.
         "generator": "Ninja",
 
         // Build type.
         // Default: "Release"
         // Possible: "Debug"|"Release"|"RelWithDebInfo"|etc.
         "type": "Release",
-
-        // Path to write output executables. Applies to RUNTIME, LIBRARY, and ARCHIVE targets.
-        // Default: <cachePath>
-        "outputPath": "/path/to/output/dir",
 
         // Extra command line arguments, e.g., cache defines.
         // Default: []
@@ -365,13 +399,40 @@ Make does not have `configure` parameters. As such, the
     },
 
     "build": {
-        // The build "path" is hardcoded to config["configure"]["cachePath"].
+        // Path to build cache
+        // Default: <config_dir>/build
+        "path": "/path/to/build/cache",
+
+        // Target to pass to Make
+        // Default: None
+        "target": "targetName",
 
         // Arguments to pass to ninja, make, etc.
         // Default: []
         "arguments": [
             "-j", "4"
         ]
+    },
+
+    "install": {
+        // Path to install executables to.
+        // Default: <config_dir>/dist
+        "path": "/path/to/install/destination",
+
+        // Paths to install artifacts.
+        // Relative paths are resolved to the config file directory, as normal.
+        // Default: <install_path>/bin (lib, include...)
+        "binaryPath": "/path/to/install/bin",
+        "libraryPath": "/path/to/install/lib",
+        "includePath": "/path/to/install/include",
+
+        // Target to pass to Make
+        // Default: "install"
+        "target": "targetName",
+
+        // Arguments to pass to Make
+        // Default: []
+        "arguments": [ /* ... */ ]
     },
 
     "clean": {

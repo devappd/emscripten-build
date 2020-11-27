@@ -1,12 +1,11 @@
 import mergeWith from 'lodash.mergewith';
-import JSONC from 'jsonc-parser';
 import path from 'path';
 import fs from 'fs';
 import { MainModuleDir } from './utils.mjs';
 
-function _getMasterConfig() {
+async function _getMasterConfig() {
   // Base configs are sourced from:
-  // 1. <main_module>/emscripten.build.json(c)
+  // 1. <main_module>/emscripten.config.json
   // 2. <main_module>/packages.json
 
   const mainScriptDir = MainModuleDir();
@@ -17,20 +16,11 @@ function _getMasterConfig() {
 
   for (const searchPath of searchSet) {
     // Try our JSON config
-    const buildConfigPath = path.join(searchPath, 'emscripten.build.json');
+    const buildConfigPath = path.join(searchPath, 'emscripten.config.js');
     let masterConfig = null;
 
     if(fs.existsSync(buildConfigPath)) {
-      masterConfig = JSON.parse(fs.readFileSync(buildConfigPath, 'utf8'));
-      masterConfig['_configPath'] = searchPath;
-      return masterConfig;
-    }
-
-    // Same, but JSONC format
-    const buildCConfigPath = path.join(searchPath, 'emscripten.build.jsonc');
-
-    if(fs.existsSync(buildCConfigPath)) {
-      masterConfig = JSONC.parse(fs.readFileSync(buildCConfigPath, 'utf8'));
+      masterConfig = (await import(buildConfigPath)).default;
       masterConfig['_configPath'] = searchPath;
       return masterConfig;
     }
@@ -57,10 +47,10 @@ function _getMasterConfig() {
 
 /**
  * Get config to pass to Bootstrap object.
- * @param {string} [configName] - The name of a base config to use from your `emscripten.build.json` file.
+ * @param {string} [configName] - The name of a base config to use from your `emscripten.config.js` file.
  * @param {object} [configFragment] - An object fragment to merge to the base config.
  */
-export function GetWorkingConfig(a, b) {
+export async function GetWorkingConfig(a, b) {
   // Master config format:
   //
   // {
@@ -80,27 +70,28 @@ export function GetWorkingConfig(a, b) {
   // Parse arguments
   let baseConfigKey = null;
   let configFragment = {};
+  let args = Array.from(arguments).filter(el => (typeof el !== 'undefined'));
 
-  switch (arguments.length) {
+  switch (args.length) {
     case 0:
       break;
   
     case 1:
-      if (typeof a === 'string')
-        baseConfigKey = a || baseConfigKey;
+      if (typeof args[0] === 'string')
+        baseConfigKey = args[0] || baseConfigKey;
       else
-        configFragment = a || configFragment;
+        configFragment = args[0] || configFragment;
       break;
   
     case 2:
     default:
-      baseConfigKey = a || baseConfigKey;
-      configFragment = b || configFragment;
+      baseConfigKey = args[0] || baseConfigKey;
+      configFragment = args[1] || configFragment;
       break;
   }
 
   // Get configs to process
-  let masterConfig = _getMasterConfig();
+  let masterConfig = await _getMasterConfig();
   let workingConfig = {};
 
   // If EMSDK variables are top-level, make note of those then remove
@@ -145,16 +136,21 @@ export function GetWorkingConfig(a, b) {
     // If there's only one key, we have our sub-config
     baseConfigKey = keys[0]; // for re-use
     workingConfig = masterConfig[baseConfigKey];
+  } else if (!keys.length && (typeof configFragment === 'object')) {
+    // If the master config is empty, but the user specified a config fragment,
+    // then the fragment becomes our working config.
+    workingConfig = configFragment;
   } else
     throw new RangeError(`Cannot determine base config to use. Specify "configKey" parameter or set "default" name in the master config.`);
 
   // Merge appendConfig into finalConfig
-  mergeWith(workingConfig, configFragment, function(objValue, srcValue) {
-    // Overwrite arrays, don't merge them
-    if (Array.isArray(objValue))
-      return srcValue;
-    // Else, merge by default behavior (recursive for objects, assignment for other types)
-  });
+  if (!workingConfig === configFragment)
+    mergeWith(workingConfig, configFragment, function(objValue, srcValue) {
+      // Overwrite arrays, don't merge them
+      if (Array.isArray(objValue))
+        return srcValue;
+      // Else, merge by default behavior (recursive for objects, assignment for other types)
+    });
 
   // A config object must have a build type.
   // This also catches empty configs.

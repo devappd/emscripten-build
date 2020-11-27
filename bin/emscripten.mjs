@@ -14,10 +14,11 @@ async function main(argv) {
   // emscripten configure [config_name]
   // emscripten build [config_name]
   // emscripten clean [config_name]
+  // emscripten install [config_name]
   // emscripten reconfigure [config_name]
   // emscripten rebuild [config_name]
   // emscripten compile [config_name]
-  // emscripten install <version> [config_name]
+  // emscripten installSDK <version> [install_path]
   // emscripten run <command> [arg...]
   // emscripten <command> [arg...]
 
@@ -44,6 +45,10 @@ emscripten clean [config_name]
 
     Reset the project's build directories.
 
+emscripten install [config_name]
+
+    Install the project's build files per the Makefile target.
+
 emscripten reconfigure [config_name]
 
     Clean the project then configure it.
@@ -57,10 +62,10 @@ emscripten compile [config_name]
     Build the project. If the build fails, the project is cleaned then
     a rebuild is attempted.
 
-emscripten install [config_name]
+emscripten installSDK [config_name]
 
-    Install the given EMSDK version into the given path. Path defaults
-    to the user's NPM config.
+    Install the given EMSDK version into the given path, per the build
+    configuration.
 
 emscripten run <command> [arg...]
 emscripten <command> [arg...]
@@ -71,7 +76,7 @@ emscripten <command> [arg...]
 
   // Call the standard commands
   let verbs = ['configure','build','clean',
-    'reconfigure','rebuild','compile', 'install'];
+    'reconfigure','rebuild','compile', 'install', 'installSDK'];
   
   if (verbs.indexOf(cmd) >= 0) {
     let configKey = (args.length) ? args.shift() : null;
