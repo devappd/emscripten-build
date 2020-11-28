@@ -14,11 +14,12 @@ image:
 
 install:
   # Install Node.js
-  # Add MSYS2 and MinGW to PATH so that Autotools/Make tests pass
+  # Add MSYS2 usr/bin to PATH so that Autotools/Make tests pass
+  # Bash is already in PATH via C:\Program Files\git\bin
   - ps: |
       If ($env:APPVEYOR_BUILD_WORKER_IMAGE.StartsWith("Visual Studio")) {
         Install-Product node $env:nodejs_version
-        $env:PATH += ";C:\msys64;C:\msys64\mingw64\bin"
+        $env:PATH += ";C:\msys64\usr\bin"
       }
   - sh: |
       if [[ ${APPVEYOR_BUILD_WORKER_IMAGE} != "Visual Studio"* ]]; then
