@@ -162,7 +162,7 @@ export async function checkMakeInstalled() {
 
   // Check if Make is in path
   try {
-    makeCommand = await which('msbuild');
+    makeCommand = await which('make');
     _MakeExists = true;
     return true;
   } catch (e) {

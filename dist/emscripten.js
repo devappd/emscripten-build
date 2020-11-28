@@ -369,7 +369,7 @@ async function checkMakeInstalled() {
 
   // Check if Make is in path
   try {
-    makeCommand = await which__default['default']('msbuild');
+    makeCommand = await which__default['default']('make');
     _MakeExists = true;
     return true;
   } catch (e) {
