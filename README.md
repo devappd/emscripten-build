@@ -1,6 +1,9 @@
 # emscripten-build-npm
 
-Configure and build a C/C++ project with Emscripten by using node.js.
+Build a C/C++ WebAssembly component inside your Node.js project.
+
+This package uses the [Emscripten SDK](https://emscripten.org/) to compile your C++ to WebAssembly. It
+provides a CLI and a JS API to allow you to integrate your WASM component easily into your node.js project.
 
 See example usage of this toolset in [emscripten-npm-examples](https://github.com/devappd/emscripten-npm-examples).
 
@@ -25,7 +28,28 @@ emscripten.build()
 
 ## Configuration
 
-You set your build parameters in a file named `emscripten.config.js`. A simple configuration file may look like this:
+Without arguments, this package will look for a configuration file.
+
+The simplest method is to pass a directory to a Makefile, CMake, or `./configure` build file, and
+this package will set defaults for your build environment:
+
+```js
+const emscripten = require('emscripten-build');
+
+// Builds to <project_dir>/build by default
+emscripten.build('/path/to/CMakeLists.txt')
+
+    // Installs (copies JS and WebAssembly) to <project_dir>/dist by default
+    .then(bootstrap => bootstrap.install());
+```
+
+Or on the CLI:
+
+```sh
+npx emscripten build /path/to/CMakeLists.txt && npx emscripten install /path/to/CMakeLists.txt
+```
+
+Alternatively, you may pass the CLI and JS commands with no arguments. In this case, this package will search for a configuration file named `emscripten.config.js`. A simple configuration file may look like this:
 
 ```js
 module.exports = {
@@ -52,7 +76,25 @@ module.exports = {
 }
 ```
 
-You may set different parameters for the `configure`, `build`, `install`, and `clean` steps. See later in this document for the configuration format.
+Use on the CLI:
+
+```sh
+cd <project_dir>
+npx emscripten build && npx emscripten install
+```
+
+You can also pass the same config to the JS API:
+
+```js
+const emscripten = require('emscripten-build');
+const em_config = require('./emscripten.config.js');
+
+// "myProject" refers to the named key shown in the config above.
+emscripten.build(em_config['myProject'])
+    .then(bootstrap => bootstrap.install());
+```
+
+You may set different parameters for the `configure`, `build`, `install`, and `clean` steps. You may also list multiple named configs in this config file. See later in this document for the configuration format.
 
 ## Installation
 
@@ -150,12 +192,13 @@ const emscripten = require('emscripten-build');
 
 emscripten.configure()
     .then(bootstrap => bootstrap.build())
+    .then(bootstrap => bootstrap.install());
     .then(bootstrap => bootstrap.clean());
 ```
 
 However, you cannot select a new config in the chained bootstrap nor specify a fragment to edit it. If you wish to do so, you need to call a method on the `emscripten` module.
 
-You can specify an object fragment to override certain parameters in your config. Note in this example that we're not chaining calls on `bootstrap`, but we are calling `emscripten.build()` every time.
+You can specify an object fragment to override certain parameters in your config. Note in this example that we're not chaining calls on `bootstrap`, but we are calling `emscripten.build()` when we provide a config fragment.
 
 ```js
 const emscripten = require('emscripten-build');
@@ -171,11 +214,7 @@ emscripten.configure()
             "target": "SubProject"
         }
     }))
-    .then(_ => emscripten.clean({
-        "clean": {
-            "paths": [ "/path/to/obj" ]
-        }
-    }));
+    .then(bootstrap => bootstrap.install());
 ```
 
 With `emscripten.run()`, you can run any command inside the EMSDK environment. It does not return a bootstrap.
