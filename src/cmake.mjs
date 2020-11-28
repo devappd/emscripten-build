@@ -5,7 +5,7 @@ import glob from 'glob';
 import fs from 'fs';
 import emsdk from 'emsdk-npm';
 import shelljs from 'shelljs';
-import { MainModuleDir, IsDir, TryResolvePath } from './utils.mjs';
+import { IsDir, TryResolvePath } from './utils.mjs';
 
 export default class CMake extends Bootstrap {
   constructor(workingConfig) {

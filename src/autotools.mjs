@@ -5,6 +5,7 @@ import { TryResolvePath } from './utils.mjs';
 import shelljs from 'shelljs';
 import path from 'path';
 import fs from 'fs';
+import { checkBashInstalled, bashCommand } from './environment.mjs';
 
 export default class Autotools extends Bootstrap {
   constructor(workingConfig) {
@@ -120,9 +121,14 @@ export default class Autotools extends Bootstrap {
     let args = this.__buildConfigureArguments();
     let configSubCommand = path.join(this.config.configure.path, this.configSubCommand);
 
+    // If win32, run ./configure under a BASH shell
+    let shellOpts = {};
+    if (process.platform === 'win32')
+      shellOpts.shell = bashCommand;
+
     await emsdk.run(this.configCommand,
       [configSubCommand, ...args],
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.config.build.path, ...shellOpts}
     );
   }
 
@@ -166,6 +172,8 @@ export default class Autotools extends Bootstrap {
   }
 
   async _bindConfigCommand(impl, ...args) {
+    // Throws error if Bash is not installed.
+    await checkBashInstalled();
     this.__ensureBuildDirExists();
     return this._bindCommand(impl, ...args);
   }
@@ -181,6 +189,8 @@ export default class Autotools extends Bootstrap {
   }
 
   async _bindConfigMakeCommand(impl, ...args) {
+    // Throws error if Bash is not installed.
+    await checkBashInstalled();
     // Throws error if Make is not installed.
     await checkMakeInstalled();
     this.makeSubCommand = makeCommand;

@@ -388,6 +388,49 @@ async function checkMakeInstalled() {
   throw new Error('Make was not found!');
 }
 
+let _BashExists = false;
+let bashCommand = 'bash';
+
+async function checkBashInstalled() {
+  if (_BashExists)
+    return true;
+
+  // Presume bash exists if Linux
+  if (os__default['default'].platform() !== 'win32') {
+    _BashExists = true;
+    return true;
+  }
+
+  // Check if MSYS2 is in path
+  try {
+    bashCommand = await which__default['default']('msys2');
+    _BashExists = true;
+    return true;
+  } catch (e) {
+    // fall through, presume not in PATH
+  }
+
+  // Check if Bash is in path
+  try {
+    bashCommand = await which__default['default']('bash');
+    _BashExists = true;
+    return true;
+  } catch (e) {
+    // fall through, presume not in PATH
+  }
+
+  // Check if Cygwin is in path
+  try {
+    bashCommand = await which__default['default']('cygwin');
+    _BashExists = true;
+    return true;
+  } catch (e) {
+    // fall through, presume not in PATH
+  }
+
+  throw new Error('Bash shell was not found!');
+}
+
 // https://github.com/tapjs/libtap/pull/21/files
 function MainScript(defaultName) {
   if (typeof repl !== 'undefined' || '_eval' in process) {
@@ -922,9 +965,14 @@ class Autotools extends Bootstrap {
     let args = this.__buildConfigureArguments();
     let configSubCommand = path__default['default'].join(this.config.configure.path, this.configSubCommand);
 
+    // If win32, run ./configure under a BASH shell
+    let shellOpts = {};
+    if (process.platform === 'win32')
+      shellOpts.shell = bashCommand;
+
     await emsdk__default['default'].run(this.configCommand,
       [configSubCommand, ...args],
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.config.build.path, ...shellOpts}
     );
   }
 
@@ -968,6 +1016,8 @@ class Autotools extends Bootstrap {
   }
 
   async _bindConfigCommand(impl, ...args) {
+    // Throws error if Bash is not installed.
+    await checkBashInstalled();
     this.__ensureBuildDirExists();
     return this._bindCommand(impl, ...args);
   }
@@ -983,6 +1033,8 @@ class Autotools extends Bootstrap {
   }
 
   async _bindConfigMakeCommand(impl, ...args) {
+    // Throws error if Bash is not installed.
+    await checkBashInstalled();
     // Throws error if Make is not installed.
     await checkMakeInstalled();
     this.makeSubCommand = makeCommand;

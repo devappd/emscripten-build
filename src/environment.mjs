@@ -180,3 +180,46 @@ export async function checkMakeInstalled() {
 
   throw new Error('Make was not found!');
 }
+
+let _BashExists = false;
+export let bashCommand = 'bash';
+
+export async function checkBashInstalled() {
+  if (_BashExists)
+    return true;
+
+  // Presume bash exists if Linux
+  if (os.platform() !== 'win32') {
+    _BashExists = true;
+    return true;
+  }
+
+  // Check if MSYS2 is in path
+  try {
+    bashCommand = await which('msys2');
+    _BashExists = true;
+    return true;
+  } catch (e) {
+    // fall through, presume not in PATH
+  }
+
+  // Check if Bash is in path
+  try {
+    bashCommand = await which('bash');
+    _BashExists = true;
+    return true;
+  } catch (e) {
+    // fall through, presume not in PATH
+  }
+
+  // Check if Cygwin is in path
+  try {
+    bashCommand = await which('cygwin');
+    _BashExists = true;
+    return true;
+  } catch (e) {
+    // fall through, presume not in PATH
+  }
+
+  throw new Error('Bash shell was not found!');
+}
