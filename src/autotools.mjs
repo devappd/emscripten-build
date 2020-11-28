@@ -3,6 +3,7 @@ import emsdk from 'emsdk-npm';
 import { checkMakeInstalled, makeCommand } from './environment.mjs';
 import { TryResolvePath } from './utils.mjs';
 import shelljs from 'shelljs';
+import path from 'path';
 
 export default class Autotools extends Bootstrap {
   constructor(workingConfig) {
@@ -120,9 +121,10 @@ export default class Autotools extends Bootstrap {
 
   async _configure() {
     let args = this.__buildConfigureArguments();
+    let configSubCommand = path.join(this.config.configure.path, this.configSubCommand);
 
     await emsdk.run(this.configCommand,
-      [this.configSubCommand, ...args],
+      [configSubCommand, ...args],
       {cwd: this.config.build.path, shell: (process.platform === 'win32')}
     );
   }

@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/devappd/emscripten-build-npm#readme",
   "dependencies": {
-    "emsdk-npm": "https://github.com/devappd/emsdk-npm/archive/master.tar.gz",
+    "emsdk-npm": "git+https://github.com/devappd/emsdk-npm",
     "get-installed-path": "^4.0.8",
     "lodash.mergewith": "^4.6.2",
     "resolve-path": "^1.4.0",

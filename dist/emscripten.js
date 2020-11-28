@@ -2,7 +2,7 @@
 'use strict';
 
 var emsdk = require('emsdk-npm');
-var path$1 = require('path');
+var path = require('path');
 var getInstalledPathCJS = require('get-installed-path');
 var os = require('os');
 var which = require('which');
@@ -35,7 +35,7 @@ function _interopNamespace(e) {
 }
 
 var emsdk__default = /*#__PURE__*/_interopDefaultLegacy(emsdk);
-var path__default = /*#__PURE__*/_interopDefaultLegacy(path$1);
+var path__default = /*#__PURE__*/_interopDefaultLegacy(path);
 var getInstalledPathCJS__default = /*#__PURE__*/_interopDefaultLegacy(getInstalledPathCJS);
 var os__default = /*#__PURE__*/_interopDefaultLegacy(os);
 var which__default = /*#__PURE__*/_interopDefaultLegacy(which);
@@ -892,7 +892,7 @@ class Autotools extends Bootstrap {
 
   async __ensureConfigure() {
     try {
-      await fs.lstat(path.join(this.config.build.path, "Makefile"));
+      await fs.lstat(path__default['default'].join(this.config.build.path, "Makefile"));
     }
     catch (e) {
       await this._bindConfigCommand(this._configure);
@@ -924,9 +924,10 @@ class Autotools extends Bootstrap {
 
   async _configure() {
     let args = this.__buildConfigureArguments();
+    let configSubCommand = path__default['default'].join(this.config.configure.path, this.configSubCommand);
 
     await emsdk__default['default'].run(this.configCommand,
-      [this.configSubCommand, ...args],
+      [configSubCommand, ...args],
       {cwd: this.config.build.path, shell: (process.platform === 'win32')}
     );
   }

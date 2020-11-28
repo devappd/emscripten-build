@@ -36,8 +36,11 @@ $passCount = 0
 
 $examples = @(
     "Example-01-HelloWorld",
-    "Example-04-CMake",
-    "Example-05-Library"
+    "Example-02-Make",
+    "Example-03-CMake",
+    "Example-04-Autotools",
+    "Example-05-Library",
+    "Example-06-SDL-OpenGL"
 )
 
 Start-Process -FilePath 'git' -ArgumentList ('clone','https://github.com/devappd/emscripten-npm-examples') -Wait -NoNewWindow

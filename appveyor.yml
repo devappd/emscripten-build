@@ -8,15 +8,17 @@ environment:
     - nodejs_version: "12"
 
 image:
-  - macos
   - Visual Studio 2019
+  - macos
   - Ubuntu
 
 install:
   # Install Node.js
+  # Add MSYS2 and MinGW to PATH so that Autotools/Make tests pass
   - ps: |
       If ($env:APPVEYOR_BUILD_WORKER_IMAGE.StartsWith("Visual Studio")) {
         Install-Product node $env:nodejs_version
+        $env:PATH += ";C:\msys64;C:\msys64\mingw64\bin"
       }
   - sh: |
       if [[ ${APPVEYOR_BUILD_WORKER_IMAGE} != "Visual Studio"* ]]; then

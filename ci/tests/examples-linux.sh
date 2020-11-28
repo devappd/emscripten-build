@@ -30,8 +30,11 @@ passCount=0
 
 declare -a examples=(
     "Example-01-HelloWorld"
-    "Example-04-CMake"
+    "Example-02-Make"
+    "Example-03-CMake"
+    "Example-04-Autotools"
     "Example-05-Library"
+    "Example-06-SDL-OpenGL"
 )
 
 cd ~
