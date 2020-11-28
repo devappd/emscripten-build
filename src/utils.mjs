@@ -31,6 +31,16 @@ export function IsDir(path) {
   }
 }
 
+export function IsFile(path) {
+  try {
+      var stat = fs.lstatSync(path);
+      return stat.isFile();
+  } catch (e) {
+      // lstatSync throws an error if path doesn't exist
+      return false;
+  }
+}
+
 export function TryResolvePath(relativePath, rootPath) {
   if (!rootPath)
     return path.resolve(relativePath);

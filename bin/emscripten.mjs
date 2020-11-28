@@ -11,13 +11,13 @@ async function main(argv) {
 
   // Valid invocations:
   //
-  // emscripten configure [config_name]
-  // emscripten build [config_name]
-  // emscripten clean [config_name]
-  // emscripten install [config_name]
-  // emscripten reconfigure [config_name]
-  // emscripten rebuild [config_name]
-  // emscripten compile [config_name]
+  // emscripten configure [config_locator]
+  // emscripten build [config_locator]
+  // emscripten clean [config_locator]
+  // emscripten install [config_locator]
+  // emscripten reconfigure [config_locator]
+  // emscripten rebuild [config_locator]
+  // emscripten compile [config_locator]
   // emscripten installSDK <version> [install_path]
   // emscripten run <command> [arg...]
   // emscripten <command> [arg...]
@@ -33,36 +33,36 @@ emscripten-build
 
 Usage: 
 
-emscripten configure [config_name]
+emscripten configure [config_locator]
 
     Configure the project.
 
-emscripten build [config_name]
+emscripten build [config_locator]
 
     Build the project and configure it first if necessary.
 
-emscripten clean [config_name]
+emscripten clean [config_locator]
 
     Reset the project's build directories.
 
-emscripten install [config_name]
+emscripten install [config_locator]
 
     Install the project's build files per the Makefile target.
 
-emscripten reconfigure [config_name]
+emscripten reconfigure [config_locator]
 
     Clean the project then configure it.
 
-emscripten rebuild [config_name]
+emscripten rebuild [config_locator]
 
     Clean the project, configure it, then build.
 
-emscripten compile [config_name]
+emscripten compile [config_locator]
 
     Build the project. If the build fails, the project is cleaned then
     a rebuild is attempted.
 
-emscripten installSDK [config_name]
+emscripten installSDK [config_locator]
 
     Install the given EMSDK version into the given path, per the build
     configuration.

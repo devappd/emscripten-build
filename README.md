@@ -94,48 +94,53 @@ If you have any issues with the environment, you may refer to [issue #15](https:
 
 ## Command Line Usage
 
-In all commands, `config_name` is optional and refers to the name of your config in
-`emscripten.config.js`.
+In all commands, `config_locator` is optional and refers to either:
+* The name of a config listed in `emscripten.config.js`
+* Path to a folder containing either `CMakeLists.txt`, `./configure`, or `Makefile`
+* Path to one of these three files
 
-If `config_name` is not specified, it defaults to the `default` name specified in
+If `config_locator` is a folder, it will search for `CMakeLists.txt`, `./configure`, or `Makefile`
+in that order.
+
+If `config_locator` is not specified, it defaults to the `default` name specified in
 `emscripten.config.js`. Or, if there's only one config specified, then that sole config
 will be selected.
 
 | Command | Description
 | ------- | -----------
-| `npx emscripten configure [config_name]` | Configure the project.
-| `npx emscripten build [config_name]` | Build the project and configure it first if necessary.
-| `npx emscripten clean [config_name]` | Reset the project's build files.
-| `npx emscripten install [config_name]` | Copy the project's build output into a target directory.
-| `npx emscripten reconfigure [config_name]` | Clean the project then configure it.
-| `npx emscripten rebuild [config_name]` | Clean the project, configure it, then build.
-| `npx emscripten compile [config_name]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
+| `npx emscripten configure [config_locator]` | Configure the project.
+| `npx emscripten build [config_locator]` | Build the project and configure it first if necessary.
+| `npx emscripten clean [config_locator]` | Reset the project's build files.
+| `npx emscripten install [config_locator]` | Copy the project's build output into a target directory.
+| `npx emscripten reconfigure [config_locator]` | Clean the project then configure it.
+| `npx emscripten rebuild [config_locator]` | Clean the project, configure it, then build.
+| `npx emscripten compile [config_locator]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
 | `npx emscripten run <command> [arg...]` | Runs a given command under the context of the EMSDK environment.
 
 ## JavaScript Usage
 
 This package also supplies JavaScript bindings for the above commands:
     
-* `emscripten.configure(configName, customConfig)`
+* `emscripten.configure(configLocator, customConfig)`
 
-* `emscripten.build(configName, customConfig)` or `emscripten.make(configName, customConfig)`
+* `emscripten.build(configLocator, customConfig)` or `emscripten.make(configLocator, customConfig)`
 
-* `emscripten.clean(configName, customConfig)`
+* `emscripten.clean(configLocator, customConfig)`
 
-* `emscripten.install(configName, customConfig)`
+* `emscripten.install(configLocator, customConfig)`
 
-* `emscripten.reconfigure(configName, customConfig)`
+* `emscripten.reconfigure(configLocator, customConfig)`
 
-* `emscripten.rebuild(configName, customConfig)`
+* `emscripten.rebuild(configLocator, customConfig)`
 
-* `emscripten.compile(configName, customConfig)`
+* `emscripten.compile(configLocator, customConfig)`
 
 For all methods, both parameters are optional.
 
 | Parameter    | Description |
 | ------------ | ------------|
-| `configName` | Selects the named config in your `emscripten.config.js`. Defaults to the `default` name specified in that file, or the sole config if there's only one listed.
-| `customConfig` | An object fragment with properties to overwrite on your selected config. This performs a deep merge on your selected config using this fragment.
+| `configLocator` | Either a path to a folder containing `CMakeLists.txt`, `./configure`, or `Makefile`; or a path directly to these files; or a config name specified in `emscripten.config.js`; or an object that conforms to a top-level config (see "Configuration Files", later). If a path to a folder is given, a build file is searched for in the above order.
+| `customConfig` | An object fragment with properties to overwrite on your selected config. This performs a deep merge on your selected config using this fragment. This parameter is not valid if you specify `configLocator` as a config object.
 
 Calling these methods will perform the action and return a Promise that yields a Bootstrap object.
 On the Bootstrap object, you can chain multiple calls while reusing the same config.

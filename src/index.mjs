@@ -28,7 +28,7 @@ async function _callAction(actionName, a, b) {
 
 /**
  * Configure the C/C++ project with a given config.
- * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {string} [configLocator] - The name of a sub-config to use from the base config.
  * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
  */
 export async function configure(a, b) {
@@ -37,7 +37,7 @@ export async function configure(a, b) {
 
 /**
  * Build the C/C++ project with a given config. Also configure the project if necessary.
- * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {string} [configLocator] - The name of a sub-config to use from the base config.
  * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
  */
 export async function build(a, b) {
@@ -46,7 +46,7 @@ export async function build(a, b) {
 
 /**
  * Clean the C/C++ project with a given config.
- * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {string} [configLocator] - The name of a sub-config to use from the base config.
  * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
  */
 export async function clean(a, b) {
@@ -55,7 +55,7 @@ export async function clean(a, b) {
 
 /**
  * Install the C/C++ project with a given config.
- * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {string} [configLocator] - The name of a sub-config to use from the base config.
  * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
  */
 export async function install(a, b) {
@@ -64,7 +64,7 @@ export async function install(a, b) {
 
 /**
  * Clean then configure the C/C++ project with a given config.
- * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {string} [configLocator] - The name of a sub-config to use from the base config.
  * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
  */
 export async function reconfigure(a, b) {
@@ -73,7 +73,7 @@ export async function reconfigure(a, b) {
 
 /**
  * Clean, configure, then build the C/C++ project with a given config.
- * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {string} [configLocator] - The name of a sub-config to use from the base config.
  * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
  */
 export async function rebuild(a, b) {
@@ -82,7 +82,7 @@ export async function rebuild(a, b) {
 
 /**
  * Build the C/C++ project with a given config. If the build fails, then clean, configure, and rebuild.
- * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {string} [configLocator] - The name of a sub-config to use from the base config.
  * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
  */
 export async function compile(a, b) {
@@ -91,7 +91,7 @@ export async function compile(a, b) {
 
 /**
  * Install the given EMSDK version from the given config.
- * @param {string} [configName] - The name of a sub-config to use from the base config.
+ * @param {string} [configLocator] - The name of a sub-config to use from the base config.
  * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
  */
 export async function installSDK(a, b) {

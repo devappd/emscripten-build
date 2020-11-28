@@ -2,6 +2,7 @@ import Bootstrap from './bootstrap.mjs';
 import emsdk from 'emsdk-npm';
 import { checkMakeInstalled, makeCommand } from './environment.mjs';
 import { TryResolvePath } from './utils.mjs';
+import shelljs from 'shelljs';
 
 export default class Autotools extends Bootstrap {
   constructor(workingConfig) {

@@ -1,8 +1,5 @@
-import path from 'path';
 import ActivateEmSDK from './activate.mjs';
 import emsdk from 'emsdk-npm';
-import shell from 'shelljs';
-import fs from 'fs';
 
 export default class Bootstrap {
   constructor(workingConfig) {

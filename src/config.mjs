@@ -1,14 +1,51 @@
 import mergeWith from 'lodash.mergewith';
 import path from 'path';
 import fs from 'fs';
-import { MainModuleDir } from './utils.mjs';
+import { MainModuleDir, IsDir, IsFile, TryResolvePath } from './utils.mjs';
 
-async function _getMasterConfig() {
-  // Base configs are sourced from:
-  // 1. <main_module>/emscripten.config.json
-  // 2. <main_module>/packages.json
+function _constructMasterConfig(buildFilePath) {
+  // buildFilePath is assumed to be an exact path to CMakeLists.txt/configure/Makefile
+  let testPath = buildFilePath.toLowerCase();
+  let config = {};
 
+  if (testPath.includes('cmake'))
+    config.type = 'cmake';
+  else if (testPath.includes('configure'))
+    config.type = 'autotools';
+  else if (testPath.includes('makefile'))
+    config.type = 'make';
+  else
+    throw new Error(`Unknown build file type: ${buildFilePath}`);
+
+  switch (config.type) {
+    case 'make':
+      config.build = {
+        path: path.dirname(buildFilePath)
+      };
+      break;
+
+    default:
+      config.configure = {
+        path: path.dirname(buildFilePath)
+      }
+      break;
+  }
+
+  // We use the _retrieved key to mark for retrieval later
+  return {_retrieved: config};
+}
+
+async function _getMasterConfig(configLocator) {
+  // configLocator can be one of:
+  // 1. The name of a config listed in `emscripten.config.js`
+  // 2. A path to a folder that contains `CMakeLists.txt`, `./configure`, or `Makefile`
+  // 3. A path directly to one of the above files
+
+  let masterConfig = null;
   const mainScriptDir = MainModuleDir();
+
+  // 1. Search for `emscripten.config.js` first. If configLocator is a valid name, then
+  // we break there.
 
   // Because we can't reliably get the main module,
   // hack things and search CWD for our config
@@ -17,28 +54,52 @@ async function _getMasterConfig() {
   for (const searchPath of searchSet) {
     // Try our JSON config
     const buildConfigPath = path.join(searchPath, 'emscripten.config.js');
-    let masterConfig = null;
+    
 
     if(fs.existsSync(buildConfigPath)) {
       masterConfig = (await import(buildConfigPath)).default;
       masterConfig['_configPath'] = searchPath;
-      return masterConfig;
-    }
-    
-    // Now try package.json
-    // const packagePath = path.join(searchPath, 'package.json');
+      
+      // Test: Did we retrieve masterConfig? Is configLocator empty?
+      if(!(typeof configLocator === 'string'))
+        return masterConfig;
 
-    // Node's ES6 module loader bugs out here, so dummy it out.
-    // "Unexpected strict mode reserved word"
-    // if(fs.existsSync(packagePath)) {
-    //   const package = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-    //   if ('emscriptenBuild' in package &&
-    //     package.emscriptenBuild instanceof Object) {
-    //     masterConfig = package.emscriptenBuild;
-    //     masterConfig['_configPath'] = searchPath;
-    //     return masterConfig;
-    //   }
-    // }
+      // Test: Is configLocator a valid key?
+      if (typeof masterConfig[configLocator] === 'object') {
+        masterConfig.default = configLocator; // mark for retrieval
+        return masterConfig; // we retrieve the configLocator object later
+      }
+    }
+
+    // configLocator must be a non-empty string for the next tests
+    if (!(typeof configLocator === 'string')
+        || !configLocator)
+      continue;
+
+    // Test: Is configLocator a path to a directory? Search for build files
+    let testPath = TryResolvePath(configLocator, searchPath);
+    let searchFiles = ['CMakeLists.txt', 'configure', 'Makefile', 'makefile'];
+
+    if (IsDir(testPath)) {  
+      for (let fileName of searchFiles) {
+        if (IsFile(path.join(testPath, fileName))) {
+          let config = _constructMasterConfig(path.join(testPath, fileName));
+          config.default = '_retrieved'; // mark for retrieval
+          return config;
+        }
+      }
+    }
+
+    // Test: Is configLocator an exact path to one of the searchFiles?
+    if (IsFile(testPath)) {
+      for (let fileName of searchFiles) {
+        if (testPath.includes(fileName)) {
+          let config = _constructMasterConfig(testPath);
+          config.default = '_retrieved'; // mark for retrieval
+          return config;
+        }
+      }
+    }
   }
 
   // Return an empty object
@@ -47,8 +108,8 @@ async function _getMasterConfig() {
 
 /**
  * Get config to pass to Bootstrap object.
- * @param {string} [configName] - The name of a base config to use from your `emscripten.config.js` file.
- * @param {object} [configFragment] - An object fragment to merge to the base config.
+ * @param {string} [configLocator] - A name to a config listed in `emscripten.config.js`, or a path to a folder containing CMake/Autotools/Makefile configs, or a configuration object.
+ * @param {object} [configFragment] - An object fragment to merge to the selected config. Not valid if `configLocator` is an object.
  */
 export async function GetWorkingConfig(a, b) {
   // Master config format:
@@ -68,7 +129,7 @@ export async function GetWorkingConfig(a, b) {
   // and merge any changes from configFragment.
 
   // Parse arguments
-  let baseConfigKey = null;
+  let configLocator = null;
   let configFragment = {};
   let args = Array.from(arguments).filter(el => (typeof el !== 'undefined'));
 
@@ -78,20 +139,20 @@ export async function GetWorkingConfig(a, b) {
   
     case 1:
       if (typeof args[0] === 'string')
-        baseConfigKey = args[0] || baseConfigKey;
+        configLocator = args[0] || configLocator;
       else
         configFragment = args[0] || configFragment;
       break;
   
     case 2:
     default:
-      baseConfigKey = args[0] || baseConfigKey;
+      configLocator = args[0] || configLocator;
       configFragment = args[1] || configFragment;
       break;
   }
 
   // Get configs to process
-  let masterConfig = await _getMasterConfig();
+  let masterConfig = await _getMasterConfig(configLocator);
   let workingConfig = {};
 
   // If EMSDK variables are top-level, make note of those then remove
@@ -115,18 +176,19 @@ export async function GetWorkingConfig(a, b) {
   }
 
   // If config declares a default base config, then retrieve the base config.
-  // Don't overwrite input baseConfigKey.
+  // If configLocator pointed to a config in _getMasterConfig(), we also
+  // populate this "default" variable to update the configLocator.
   if ('default' in masterConfig) {
-    if (!baseConfigKey && typeof masterConfig.default === 'string')
-      baseConfigKey = masterConfig.default;
+    if (typeof masterConfig.default === 'string')
+      configLocator = masterConfig.default;
     delete masterConfig.default;
   }
 
-  if (baseConfigKey) {
-    if (baseConfigKey in masterConfig)
-      workingConfig = masterConfig.configKey;
+  if (configLocator) {
+    if (configLocator in masterConfig)
+      workingConfig = masterConfig[configLocator];
     else
-      throw new RangeError(`Requested base config "${baseConfigKey}" was not found in master config.`);
+      throw new RangeError(`Requested base config "${configLocator}" was not found in master config.`);
   }
   
   // Else, determine finalConfig from keys
@@ -134,8 +196,8 @@ export async function GetWorkingConfig(a, b) {
 
   if (keys.length === 1) {
     // If there's only one key, we have our sub-config
-    baseConfigKey = keys[0]; // for re-use
-    workingConfig = masterConfig[baseConfigKey];
+    configLocator = keys[0]; // for re-use
+    workingConfig = masterConfig[configLocator];
   } else if (!keys.length && (typeof configFragment === 'object')) {
     // If the master config is empty, but the user specified a config fragment,
     // then the fragment becomes our working config.
@@ -155,7 +217,7 @@ export async function GetWorkingConfig(a, b) {
   // A config object must have a build type.
   // This also catches empty configs.
   if (!('type' in workingConfig))
-    throw new RangeError(`Base config ${baseConfigKey} does not have a valid build type. Specify "type": <"make"|"autotools"|"cmake"> in the base config.`);
+    throw new RangeError(`Base config ${configLocator} does not have a valid build type. Specify "type": <"make"|"autotools"|"cmake"> in the base config.`);
 
   // Move EMSDK variables to final config, unless the final config already has them
   if (emsdkPath && !('emsdk' in workingConfig))
