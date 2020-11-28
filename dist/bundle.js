@@ -803,6 +803,18 @@ class Make extends Bootstrap {
   }
 
   async __make(subconfig) {
+    // If win32, run Make under a BASH shell, although this is not required
+    let shellOpts = {};
+    if (process.platform === 'win32') {
+      try {
+        await checkBashInstalled();
+        shellOpts.shell = bashCommand;
+      } catch (err) {
+        console.log('Running Make under non-bash shell...');
+        shellOpts.shell = true; // use CMD
+      }
+    }
+
     // build args
     let args;
     if (subconfig.target)
@@ -812,7 +824,7 @@ class Make extends Bootstrap {
 
     // Make is called on the "build" path specifically.
     await emsdk__default['default'].run(this.makeCommand, args,
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.config.build.path, ...shellOpts}
     );
   }
 
@@ -981,6 +993,18 @@ class Autotools extends Bootstrap {
     // Make sure everything's configured before building.
     await this.__ensureConfigure();
 
+    // If win32, run Make under a BASH shell, although this is not required
+    let shellOpts = {};
+    if (process.platform === 'win32') {
+      try {
+        await checkBashInstalled();
+        shellOpts.shell = bashCommand;
+      } catch (err) {
+        console.log('Running Make under non-bash shell...');
+        shellOpts.shell = true; // use CMD
+      }
+    }
+
     // build args
     let args;
     if (subconfig.target)
@@ -990,7 +1014,7 @@ class Autotools extends Bootstrap {
 
     // Make is invoked on the "build" path specifically.
     await emsdk__default['default'].run(this.makeCommand, args,
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.config.build.path, ...shellOpts}
     );
   }
 
