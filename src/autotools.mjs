@@ -4,6 +4,7 @@ import { checkMakeInstalled, makeCommand } from './environment.mjs';
 import { TryResolvePath } from './utils.mjs';
 import shelljs from 'shelljs';
 import path from 'path';
+import fs from 'fs';
 
 export default class Autotools extends Bootstrap {
   constructor(workingConfig) {
@@ -88,12 +89,8 @@ export default class Autotools extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   async __ensureConfigure() {
-    try {
-      await fs.lstat(path.join(this.config.build.path, "Makefile"));
-    }
-    catch (e) {
+    if(!fs.existsSync(path.join(this.config.build.path, "Makefile")))
       await this._bindConfigCommand(this._configure);
-    }
   }
 
   __buildConfigureArguments() {
