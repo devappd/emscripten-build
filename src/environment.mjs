@@ -194,14 +194,8 @@ export async function checkBashInstalled() {
     return true;
   }
 
-  // Check if MSYS2 is in path
-  try {
-    bashCommand = await which('msys2');
-    _BashExists = true;
-    return true;
-  } catch (e) {
-    // fall through, presume not in PATH
-  }
+  // Don't use MSYS2 because it does not interpret
+  // emsdk_env.sh correctly.
 
   // Check if Bash is in path
   try {
