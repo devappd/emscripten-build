@@ -480,13 +480,13 @@ Make does not have `configure` parameters. As such, the
     },
 
     "clean": {
-        // List of paths to clean.
-        // Default: [ config["configure"]["cachePath"] ]
-        "paths": [
-            "/path/to/clean/1",
-            "/path/to/clean/2",
-            /* ... */
-        ]
+        // Target to pass to Make
+        // Default: "clean"
+        "target": "targetName",
+
+        // Arguments to pass to Make
+        // Default: []
+        "arguments": [ /* ... */ ]
     }
 }
 ```
