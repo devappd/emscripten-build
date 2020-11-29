@@ -17,19 +17,26 @@ function _constructMasterConfig(buildFilePath) {
   else
     throw new Error(`Unknown build file type: ${buildFilePath}`);
 
+  
+  let buildFileDir = path.dirname(buildFilePath);
+
   switch (config.type) {
     case 'make':
       config.build = {
-        path: path.dirname(buildFilePath)
+        path: buildFileDir
       };
       break;
 
     default:
       config.configure = {
-        path: path.dirname(buildFilePath)
+        path: buildFileDir
       }
       break;
   }
+
+  // Mimic traditional build tools where CWD stands for the staging area
+  // where builds are cached.
+  config.configPath = process.cwd();
 
   // We use the _retrieved key to mark for retrieval later
   return {_retrieved: config};

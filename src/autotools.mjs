@@ -36,7 +36,7 @@ export default class Autotools extends Bootstrap {
         || !('path' in this.config.configure))
       throw new RangeError('Configure config must have configure.path set to your source directory (which contains ./configure).');
     else
-      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config._configPath);
+      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config.configPath);
     
     if (!this.config.configure.arguments)
       this.config.configure.arguments = [];
@@ -52,7 +52,7 @@ export default class Autotools extends Bootstrap {
       this.config[configKey].path = defaultPath;
     
     if (this.config[configKey].path)
-      this.config[configKey].path = TryResolvePath(this.config[configKey].path, this.config._configPath);
+      this.config[configKey].path = TryResolvePath(this.config[configKey].path, this.config.configPath);
 
     if (!this.config[configKey].target)
       this.config[configKey].target = targetName;
@@ -75,13 +75,13 @@ export default class Autotools extends Bootstrap {
     this.__validateMakeConfig('install', 'install', './dist');
 
     if (this.config.install.binaryPath)
-      this.config.install.binaryPath = TryResolvePath(this.config.install.binaryPath, this.config._configPath);
+      this.config.install.binaryPath = TryResolvePath(this.config.install.binaryPath, this.config.configPath);
 
     if (this.config.install.libraryPath)
-      this.config.install.libraryPath = TryResolvePath(this.config.install.libraryPath, this.config._configPath);
+      this.config.install.libraryPath = TryResolvePath(this.config.install.libraryPath, this.config.configPath);
 
     if (this.config.install.includePath)
-      this.config.install.includePath = TryResolvePath(this.config.install.includePath, this.config._configPath);
+      this.config.install.includePath = TryResolvePath(this.config.install.includePath, this.config.configPath);
   }
 
 ////////////////////////////////////////////////////////////////////////

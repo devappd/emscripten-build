@@ -42,7 +42,7 @@ export default class Make extends Bootstrap {
         || !('path' in this.config.build))
       throw new RangeError('Build config must have build.path set to your source directory (which contains Makefile).');
     else
-      this.config.build.path = TryResolvePath(this.config.build.path, this.config._configPath);
+      this.config.build.path = TryResolvePath(this.config.build.path, this.config.configPath);
     
     this.__validateMakeConfig('build', null);
   }

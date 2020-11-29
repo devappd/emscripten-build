@@ -466,7 +466,7 @@ class CMake extends Bootstrap {
         || !('path' in this.config.configure))
       throw new RangeError('Configure config must have configure.path set to your source directory (which contains CMakeLists.txt).');
     else
-      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config._configPath);
+      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config.configPath);
 
     if (!this.config.configure.generator)
       this.config.configure.generator = 'Ninja';
@@ -488,7 +488,7 @@ class CMake extends Bootstrap {
       this.config[configKey].path = defaultPath;
     
     if (this.config[configKey].path)
-      this.config[configKey].path = TryResolvePath(this.config[configKey].path, this.config._configPath);
+      this.config[configKey].path = TryResolvePath(this.config[configKey].path, this.config.configPath);
 
     if (!this.config[configKey].target)
       this.config[configKey].target = targetName;
@@ -511,13 +511,13 @@ class CMake extends Bootstrap {
     this.__validateMakeConfig('install', 'install', './dist');
 
     if (this.config.install.binaryPath)
-      this.config.install.binaryPath = TryResolvePath(this.config.install.binaryPath, this.config._configPath);
+      this.config.install.binaryPath = TryResolvePath(this.config.install.binaryPath, this.config.configPath);
 
     if (this.config.install.libraryPath)
-      this.config.install.libraryPath = TryResolvePath(this.config.install.libraryPath, this.config._configPath);
+      this.config.install.libraryPath = TryResolvePath(this.config.install.libraryPath, this.config.configPath);
 
     if (this.config.install.includePath)
-      this.config.install.includePath = TryResolvePath(this.config.install.includePath, this.config._configPath);
+      this.config.install.includePath = TryResolvePath(this.config.install.includePath, this.config.configPath);
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -737,7 +737,7 @@ class Make extends Bootstrap {
         || !('path' in this.config.build))
       throw new RangeError('Build config must have build.path set to your source directory (which contains Makefile).');
     else
-      this.config.build.path = TryResolvePath(this.config.build.path, this.config._configPath);
+      this.config.build.path = TryResolvePath(this.config.build.path, this.config.configPath);
     
     this.__validateMakeConfig('build', null);
   }
@@ -838,7 +838,7 @@ class Autotools extends Bootstrap {
         || !('path' in this.config.configure))
       throw new RangeError('Configure config must have configure.path set to your source directory (which contains ./configure).');
     else
-      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config._configPath);
+      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config.configPath);
     
     if (!this.config.configure.arguments)
       this.config.configure.arguments = [];
@@ -854,7 +854,7 @@ class Autotools extends Bootstrap {
       this.config[configKey].path = defaultPath;
     
     if (this.config[configKey].path)
-      this.config[configKey].path = TryResolvePath(this.config[configKey].path, this.config._configPath);
+      this.config[configKey].path = TryResolvePath(this.config[configKey].path, this.config.configPath);
 
     if (!this.config[configKey].target)
       this.config[configKey].target = targetName;
@@ -877,13 +877,13 @@ class Autotools extends Bootstrap {
     this.__validateMakeConfig('install', 'install', './dist');
 
     if (this.config.install.binaryPath)
-      this.config.install.binaryPath = TryResolvePath(this.config.install.binaryPath, this.config._configPath);
+      this.config.install.binaryPath = TryResolvePath(this.config.install.binaryPath, this.config.configPath);
 
     if (this.config.install.libraryPath)
-      this.config.install.libraryPath = TryResolvePath(this.config.install.libraryPath, this.config._configPath);
+      this.config.install.libraryPath = TryResolvePath(this.config.install.libraryPath, this.config.configPath);
 
     if (this.config.install.includePath)
-      this.config.install.includePath = TryResolvePath(this.config.install.includePath, this.config._configPath);
+      this.config.install.includePath = TryResolvePath(this.config.install.includePath, this.config.configPath);
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -891,12 +891,8 @@ class Autotools extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   async __ensureConfigure() {
-    try {
-      await fs.lstat(path__default['default'].join(this.config.build.path, "Makefile"));
-    }
-    catch (e) {
+    if(!fs__default['default'].existsSync(path__default['default'].join(this.config.build.path, "Makefile")))
       await this._bindConfigCommand(this._configure);
-    }
   }
 
   __buildConfigureArguments() {
@@ -1011,19 +1007,26 @@ function _constructMasterConfig(buildFilePath) {
   else
     throw new Error(`Unknown build file type: ${buildFilePath}`);
 
+  
+  let buildFileDir = path__default['default'].dirname(buildFilePath);
+
   switch (config.type) {
     case 'make':
       config.build = {
-        path: path__default['default'].dirname(buildFilePath)
+        path: buildFileDir
       };
       break;
 
     default:
       config.configure = {
-        path: path__default['default'].dirname(buildFilePath)
+        path: buildFileDir
       };
       break;
   }
+
+  // Mimic traditional build tools where CWD stands for the staging area
+  // where builds are cached.
+  config.configPath = process.cwd();
 
   // We use the _retrieved key to mark for retrieval later
   return {_retrieved: config};

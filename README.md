@@ -249,7 +249,12 @@ The below describes the parameters you can set for your build steps: `configure`
 Note that the only required parameters are `your_config["type"]` and `your_config["configure"]["path"]` (for Makefile, `your_config["build"]["path"]` is used instead.)
 The other parameters have defaults as specified below.
 
-If any relative paths are specified, they are resolved in relation to the config file's directory.
+### Relative Paths
+
+If any relative paths are specified in a config file, they are resolved in relation to the config file's directory.
+
+If you are working from a build file (e.g., `emscripten build /path/to/CMakeLists.txt`), the default paths are
+relative to your current working directory.
 
 ## Top-Level
 
