@@ -27,72 +27,72 @@ async function _callAction(actionName, a, b) {
 }
 
 /**
- * Configure the C/C++ project with a given config.
- * @param {string} [configLocator] - The name of a sub-config to use from the base config.
- * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ * Configure the C/C++ project. Invokes CMake, `./configure`, etc.
+ * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
+ * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
  */
 export async function configure(a, b) {
   return _callAction('configure', a, b);
 }
 
 /**
- * Build the C/C++ project with a given config. Also configure the project if necessary.
- * @param {string} [configLocator] - The name of a sub-config to use from the base config.
- * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ * Build the C/C++ project. Also configure the project if necessary. Invokes Make.
+ * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
+ * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
  */
 export async function build(a, b) {
   return _callAction('build', a, b);
 }
 
 /**
- * Clean the C/C++ project with a given config.
- * @param {string} [configLocator] - The name of a sub-config to use from the base config.
- * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ * Clean the C/C++ project. Invokes the "clean" target on Make.
+ * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
+ * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
  */
 export async function clean(a, b) {
   return _callAction('clean', a, b);
 }
 
 /**
- * Install the C/C++ project with a given config.
- * @param {string} [configLocator] - The name of a sub-config to use from the base config.
- * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ * Install the C/C++ project. Invokes the "install" target on Make.
+ * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
+ * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
  */
 export async function install(a, b) {
   return _callAction('install', a, b);
 }
 
 /**
- * Clean then configure the C/C++ project with a given config.
- * @param {string} [configLocator] - The name of a sub-config to use from the base config.
- * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ * Clean then configure the C/C++ project.
+ * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
+ * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
  */
 export async function reconfigure(a, b) {
   return _callAction('reconfigure', a, b);
 }
 
 /**
- * Clean, configure, then build the C/C++ project with a given config.
- * @param {string} [configLocator] - The name of a sub-config to use from the base config.
- * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ * Clean, configure, then build the C/C++ project.
+ * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
+ * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
  */
 export async function rebuild(a, b) {
   return _callAction('rebuild', a, b);
 }
 
 /**
- * Build the C/C++ project with a given config. If the build fails, then clean, configure, and rebuild.
- * @param {string} [configLocator] - The name of a sub-config to use from the base config.
- * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ * Build the C/C++ project. If the build fails, then clean, configure, and rebuild.
+ * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
+ * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
  */
 export async function compile(a, b) {
   return _callAction('compile', a, b);
 }
 
 /**
- * Install the given EMSDK version from the given config.
- * @param {string} [configLocator] - The name of a sub-config to use from the base config.
- * @param {object} [appendConfig] - A supplemental config to merge to the sub-config.
+ * Install the given EMSDK version as specified in the config.
+ * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
+ * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
  */
 export async function installSDK(a, b) {
   throw new Error('emscripten-build::install() is not yet implemented.');
@@ -109,7 +109,7 @@ export async function installSDK(a, b) {
  * Run an arbitrary command within the EMSDK environment.
  * @param {string} command - The executable name of the command.
  * @param {string[]} [args=[]] - Command line arguments
- * @param {object} [opts=[]] - Options to pass to child_process.spawn()
+ * @param {object} [opts={}] - Options to pass to child_process.spawn()
  */
 export async function run(command, args = [], opts = {}) {
   await ActivateEmSDK();

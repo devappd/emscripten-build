@@ -28,28 +28,34 @@ emscripten.build()
 
 ## Configuration
 
-Without arguments, this package will look for a configuration file.
-
-The simplest method is to pass a directory to a Makefile, CMake, or `./configure` build file, and
+You may pass a directory or file path that contains one of these files and
 this package will set defaults for your build environment:
+
+* `emscripten.build.js`
+* `CMakeLists.txt`
+* `./configure`
+* `Makefile`
+
+Without arguments, this package will look for the above files in the current working directory.
 
 ```js
 const emscripten = require('emscripten-build');
 
-// Builds to <project_dir>/build by default
+// Builds to <cwd>/build by default
 emscripten.build('/path/to/CMakeLists.txt')
 
-    // Installs (copies JS and WebAssembly) to <project_dir>/dist by default
+    // Installs (copies JS and WebAssembly) to <cwd>/dist by default
     .then(bootstrap => bootstrap.install());
 ```
 
-Or on the CLI:
+On the CLI:
 
 ```sh
 npx emscripten build /path/to/CMakeLists.txt && npx emscripten install /path/to/CMakeLists.txt
 ```
 
-Alternatively, you may pass the CLI and JS commands with no arguments. In this case, this package will search for a configuration file named `emscripten.config.js`. A simple configuration file may look like this:
+One of the files you may pass is `emscripten.config.js`. With this configuration file, you can manually
+set build paths and compiler flags. A simple configuration file may look like this:
 
 ```js
 module.exports = {
@@ -76,11 +82,12 @@ module.exports = {
 }
 ```
 
-Use on the CLI:
+Use on the CLI -- remember that the path argument is optional, and it defaults
+to searching in the current working directory:
 
 ```sh
 cd <project_dir>
-npx emscripten build && npx emscripten install
+npx emscripten build /path/to/emscripten.config.js && npx emscripten install /path/to/emscripten.config.js
 ```
 
 You can also pass the same config to the JS API:
@@ -138,11 +145,10 @@ If you have any issues with the environment, you may refer to [issue #15](https:
 
 In all commands, `config_locator` is optional and refers to either:
 * The name of a config listed in `emscripten.config.js`
-* Path to a folder containing either `CMakeLists.txt`, `./configure`, or `Makefile`
-* Path to one of these three files
+* Path to a folder containing either `emscripten.config.js`, `CMakeLists.txt`, `./configure`, or `Makefile`
+* Path to one of these four files
 
-If `config_locator` is a folder, it will search for `CMakeLists.txt`, `./configure`, or `Makefile`
-in that order.
+If `config_locator` is a folder, it will search for `emscripten.config.js`, `CMakeLists.txt`, `./configure`, or `Makefile` in that order.
 
 If `config_locator` is not specified, it defaults to the `default` name specified in
 `emscripten.config.js`. Or, if there's only one config specified, then that sole config
@@ -181,7 +187,7 @@ For all methods, both parameters are optional.
 
 | Parameter    | Description |
 | ------------ | ------------|
-| `configLocator` | Either a path to a folder containing `CMakeLists.txt`, `./configure`, or `Makefile`; or a path directly to these files; or a config name specified in `emscripten.config.js`; or an object that conforms to a top-level config (see "Configuration Files", later). If a path to a folder is given, a build file is searched for in the above order.
+| `configLocator` | Either a path to a folder containing `emscripten.config.js`, `CMakeLists.txt`, `./configure`, or `Makefile`; or a path directly to these files; or a config name specified in `emscripten.config.js`; or an object that conforms to a top-level config (see "Configuration Files", later). If a path to a folder is given, a build file is searched for in the above order.
 | `customConfig` | An object fragment with properties to overwrite on your selected config. This performs a deep merge on your selected config using this fragment. This parameter is not valid if you specify `configLocator` as a config object.
 
 Calling these methods will perform the action and return a Promise that yields a Bootstrap object.
@@ -216,6 +222,9 @@ emscripten.configure()
     }))
     .then(bootstrap => bootstrap.install());
 ```
+
+You want to structure the object not towards a top-level config (see below), but to a config
+object with keys `type`, `configure`, `build`, etc.
 
 With `emscripten.run()`, you can run any command inside the EMSDK environment. It does not return a bootstrap.
 
@@ -257,11 +266,6 @@ If you are working from a build file (e.g., `emscripten build /path/to/CMakeList
 relative to your current working directory.
 
 ## Top-Level
-
-Your config file will be searched at these locations:
-
-* `<your_module>/emscripten.config.js`
-* `<current_working_dir>/emscripten.config.js`.
 
 The config file lists some top-level fields such as `emsdkVersion`, `default`, and your project's build configurations.
 

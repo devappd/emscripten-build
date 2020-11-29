@@ -72,6 +72,10 @@ emscripten <command> [arg...]
 
     Runs a given command within the context of the emsdk environment
     in the current node project.
+
+A [config_locator] is the path to a configuration or build file; or the
+path to a directory containing the same; or the name of a config object
+listed in "<cwd>/emscripten.config.js." Default: "<cwd>"
 `.trimLeft());
 
   // Call the standard commands
