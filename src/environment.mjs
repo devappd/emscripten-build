@@ -3,6 +3,8 @@
 
 import getInstalledPathCJS from 'get-installed-path';
 import os from 'os';
+import fs from 'fs';
+import path from 'path';
 import which from 'which';
 
 const getInstalledPath = getInstalledPathCJS.getInstalledPath;
@@ -131,11 +133,11 @@ export async function checkNinjaInstalled() {
   }
 
   if (os.platform() === 'win32')
-    ninjaPath = os.path.join(ninjaPath, 'binaries', 'ninja-win.exe');
+    ninjaPath = path.join(ninjaPath, 'binaries', 'ninja-win.exe');
   else if (os.platform() === 'darwin')
-    ninjaPath = os.path.join(ninjaPath, 'binaries', 'ninja-mac');
+    ninjaPath = path.join(ninjaPath, 'binaries', 'ninja-mac');
   else if (os.platform() === 'linux' || os.platform() === 'cygwin')
-    ninjaPath = os.path.join(ninjaPath, 'binaries', 'ninja-linux');
+    ninjaPath = path.join(ninjaPath, 'binaries', 'ninja-linux');
   else
     throw new Error(`ninja was not found for your platform (${os.platform()}!`);
 

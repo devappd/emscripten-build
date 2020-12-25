@@ -5,9 +5,9 @@ var emsdk = require('emsdk-npm');
 var path = require('path');
 var getInstalledPathCJS = require('get-installed-path');
 var os = require('os');
+var fs = require('fs');
 var which = require('which');
 var glob = require('glob');
-var fs$1 = require('fs');
 var shelljs = require('shelljs');
 var resolvePath = require('resolve-path');
 var mergeWith = require('lodash.mergewith');
@@ -38,9 +38,9 @@ var emsdk__default = /*#__PURE__*/_interopDefaultLegacy(emsdk);
 var path__default = /*#__PURE__*/_interopDefaultLegacy(path);
 var getInstalledPathCJS__default = /*#__PURE__*/_interopDefaultLegacy(getInstalledPathCJS);
 var os__default = /*#__PURE__*/_interopDefaultLegacy(os);
+var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
 var which__default = /*#__PURE__*/_interopDefaultLegacy(which);
 var glob__default = /*#__PURE__*/_interopDefaultLegacy(glob);
-var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs$1);
 var shelljs__default = /*#__PURE__*/_interopDefaultLegacy(shelljs);
 var resolvePath__default = /*#__PURE__*/_interopDefaultLegacy(resolvePath);
 var mergeWith__default = /*#__PURE__*/_interopDefaultLegacy(mergeWith);
@@ -297,7 +297,7 @@ async function checkMSBuildInstalled() {
   // This always returns a path, whether or not it exists
   let msbuildPath = msbuild.buildexe();
 
-  if (!fs.existsSync(msbuildPath))
+  if (!fs__default['default'].existsSync(msbuildPath))
     throw new Error('MSBuild was not found!');
 
   // While we're here, populate the MSBuild command
@@ -342,15 +342,15 @@ async function checkNinjaInstalled() {
   }
 
   if (os__default['default'].platform() === 'win32')
-    ninjaPath = os__default['default'].path.join(ninjaPath, 'binaries', 'ninja-win.exe');
+    ninjaPath = path__default['default'].join(ninjaPath, 'binaries', 'ninja-win.exe');
   else if (os__default['default'].platform() === 'darwin')
-    ninjaPath = os__default['default'].path.join(ninjaPath, 'binaries', 'ninja-mac');
+    ninjaPath = path__default['default'].join(ninjaPath, 'binaries', 'ninja-mac');
   else if (os__default['default'].platform() === 'linux' || os__default['default'].platform() === 'cygwin')
-    ninjaPath = os__default['default'].path.join(ninjaPath, 'binaries', 'ninja-linux');
+    ninjaPath = path__default['default'].join(ninjaPath, 'binaries', 'ninja-linux');
   else
     throw new Error(`ninja was not found for your platform (${os__default['default'].platform()}!`);
 
-  if (!fs.existsSync(ninjaPath))
+  if (!fs__default['default'].existsSync(ninjaPath))
     throw new Error('ninja was not found!');
 
   // While we're here, populate the ninja command
