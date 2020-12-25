@@ -123,11 +123,13 @@ npm install --save-dev git+https://github.com/devappd/emscripten-build-npm.git
 ```
 
 By default, EMSDK is installed into your `node_modules` tree. You may specify a custom path by
-[modifying your NPM config](https://docs.npmjs.com/cli/v6/using-npm/config) as follows:
+[modifying your NPM config](https://docs.npmjs.com/cli/v6/using-npm/config) via one of the following:
 
-* Commit the path to your user `.npmrc` -- `npm config set emsdk "/your/install/path"`
-* Set an environment variable -- `set NPM_CONFIG_EMSDK=/your/install/path`
-* Use a config argument to NPM temporarily -- `npm [command] --emsdk="/your/install/path"`
+|Method|Command
+|------|-------
+| Commit the path to your user `.npmrc` | `npm config set emsdk "/your/install/path"`
+| Set an environment variable | `set NPM_CONFIG_EMSDK=/your/install/path`
+| Use a config argument to NPM temporarily | `npm [command] --emsdk="/your/install/path"`
 
 You should specify your own path in order to save disk space. In addition, if you are running on Windows, EMSDK installation will fail if your install path is longer than 85 characters.
 
@@ -138,8 +140,8 @@ This package installs these dependencies:
 * [emsdk-npm](https://github.com/devappd/emsdk-npm) -- Installs EMSDK into a location of your choice.
 * [cmake-binaries](https://github.com/devappd/cmake-binaries) -- Locates CMake on your system
 or installs it into your `node_modules`.
-* [ninja-binaries](https://github.com/Banno/ninja-binaries) -- Locates ninja on your system
-or installs it into your `node_modules`.
+* [ninja-binaries](https://github.com/Banno/ninja-binaries) -- Installs Ninja into your `node_modules`.
+(Your system's Ninja will be used if it already exists.)
 * [msbuild](https://github.com/jhaker/nodejs-msbuild) -- Locates MSBuild (Visual Studio) on your
 system. If you wish to use Visual Studio, you'll need to have it installed on your system.
 
