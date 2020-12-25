@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import * as emscripten from '../src/index.mjs';
+import * as emscripten from './index.mjs';
 
 async function main(argv) {
   let args = argv.slice(2);
