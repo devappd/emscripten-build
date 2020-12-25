@@ -51,12 +51,7 @@ var mergeWith__default = /*#__PURE__*/_interopDefaultLegacy(mergeWith);
 let _installed = [];
 let _active = null;
 
-async function ActivateEmSDK(version = 'latest') {
-  if (_active === version)
-    return;
-
-  // Update and install if we haven't yet activated `version` in this
-  // runtime session.
+async function InstallEmSDK(version = 'latest') {
   // This does not "reinstall" a version forcibly, as it checks whether
   // the version files already exist.
   if (!_installed.includes(version)) {
@@ -64,6 +59,15 @@ async function ActivateEmSDK(version = 'latest') {
     await emsdk__default['default'].install(version);
     _installed.push(version);
   }
+}
+
+async function ActivateEmSDK(version = 'latest') {
+  if (_active === version)
+    return;
+
+  // Update and install if we haven't yet activated `version` in this
+  // runtime session.
+  await InstallEmSDK(version);
   
   // Switch to `version`.
   // Note we cannot have more than one version activated at the same time.
@@ -1236,7 +1240,7 @@ async function GetWorkingConfig(a, b) {
   return workingConfig;
 }
 
-async function _callAction(actionName, a, b) {
+async function _getBootstrap(a, b) {
   let workingConfig = await GetWorkingConfig(a, b);
 
   let bootstrap;
@@ -1253,6 +1257,12 @@ async function _callAction(actionName, a, b) {
       bootstrap = new CMake(workingConfig);
       break;
   }
+
+  return bootstrap;
+}
+
+async function _callAction(actionName, a, b) {
+  const bootstrap = await _getBootstrap(a, b);
 
   return bootstrap[actionName]();
 }
@@ -1326,14 +1336,16 @@ async function compile(a, b) {
  * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
  */
 async function installSDK(a, b) {
-  throw new Error('emscripten-build::install() is not yet implemented.');
+  const bootstrap = _getBootstrap(a, b);
+  let version = 'latest';
 
-  // let workingConfig = GetWorkingConfig(a, b);
-  
-  // if (workingConfig) {
-  //   // Do emsdk and emsdkVersion exist in this object?
-  //   // Retrieve defaults then ActivateEmSDK(version, path)
-  // }
+  if (('emsdkVersion' in bootstrap.config)
+        && !!bootstrap.config.emsdkVersion)
+    version = bootstrap.config.emsdkVersion;
+
+  await InstallEmSDK(version);
+
+  return bootstrap;
 }
 
 /**

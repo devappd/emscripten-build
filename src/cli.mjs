@@ -18,7 +18,7 @@ async function main(argv) {
   // emscripten reconfigure [config_locator]
   // emscripten rebuild [config_locator]
   // emscripten compile [config_locator]
-  // emscripten installSDK <version> [install_path]
+  // emscripten installSDK [config_locator]
   // emscripten run <command> [arg...]
   // emscripten <command> [arg...]
 

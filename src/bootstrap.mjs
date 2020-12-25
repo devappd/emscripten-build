@@ -1,4 +1,4 @@
-import ActivateEmSDK from './activate.mjs';
+import { ActivateEmSDK } from './activate.mjs';
 import emsdk from 'emsdk-npm';
 
 export default class Bootstrap {

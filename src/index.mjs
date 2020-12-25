@@ -1,11 +1,11 @@
-import ActivateEmSDK from './activate.mjs';
+import { ActivateEmSDK, InstallEmSDK } from './activate.mjs';
 import CMake from './cmake.mjs';
 import Make from './make.mjs';
 import Autotools from './autotools.mjs';
 import emsdk from 'emsdk-npm';
 import { GetWorkingConfig } from './config.mjs';
 
-async function _callAction(actionName, a, b) {
+async function _getBootstrap(a, b) {
   let workingConfig = await GetWorkingConfig(a, b);
 
   let bootstrap;
@@ -22,6 +22,12 @@ async function _callAction(actionName, a, b) {
       bootstrap = new CMake(workingConfig);
       break;
   }
+
+  return bootstrap;
+}
+
+async function _callAction(actionName, a, b) {
+  const bootstrap = await _getBootstrap(a, b);
 
   return bootstrap[actionName]();
 }
@@ -95,14 +101,16 @@ export async function compile(a, b) {
  * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
  */
 export async function installSDK(a, b) {
-  throw new Error('emscripten-build::install() is not yet implemented.');
+  const bootstrap = _getBootstrap(a, b);
+  let version = 'latest';
 
-  // let workingConfig = GetWorkingConfig(a, b);
-  
-  // if (workingConfig) {
-  //   // Do emsdk and emsdkVersion exist in this object?
-  //   // Retrieve defaults then ActivateEmSDK(version, path)
-  // }
+  if (('emsdkVersion' in bootstrap.config)
+        && !!bootstrap.config.emsdkVersion)
+    version = bootstrap.config.emsdkVersion;
+
+  await InstallEmSDK(version);
+
+  return bootstrap;
 }
 
 /**

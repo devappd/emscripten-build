@@ -171,6 +171,7 @@ will be selected.
 | `emscripten reconfigure [config_locator]` | Clean the project then configure it.
 | `emscripten rebuild [config_locator]` | Clean the project, configure it, then build.
 | `emscripten compile [config_locator]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
+| `emscripten installSDK [config_locator]` | Installs the requested EMSDK version from the given config.
 | `emscripten run <command> [arg...]` | Runs a given command under the context of the EMSDK environment.
 
 ## JavaScript Usage
@@ -190,6 +191,8 @@ This package also supplies JavaScript bindings for the above commands:
 * `emscripten.rebuild(configLocator, customConfig)`
 
 * `emscripten.compile(configLocator, customConfig)`
+
+* `emscripten.installSDK(configLocator, customConfig)`
 
 For all methods, both parameters are optional.
 
@@ -281,7 +284,8 @@ In this top-level object, you may list multiple configurations by name:
 
 ```js
 module.exports = {
-    // Selects the EMSDK version to use.
+    // Selects the EMSDK version to use. This can also be specified
+    // inside a named config.
     // Default: "latest"
     "emsdkVersion": "latest",
 
