@@ -15,8 +15,8 @@ else
     commit="$TRAVIS_COMMIT"
 fi
 
-# Assumes package.json value https://github.com/devappd/emscripten-build-npm/archive/master.tar.gz
-EMSCRIPTEN_BUILD_SEARCH="master.tar.gz"
+# Assumes package.json value https://github.com/devappd/emscripten-build-npm/archive/main.tar.gz
+EMSCRIPTEN_BUILD_SEARCH="main.tar.gz"
 EMSCRIPTEN_BUILD_REPLACE="$commit.tar.gz"
 
 echo -e "
@@ -63,7 +63,7 @@ do
     rm -rf ./dist/*
     
     # Setup environment
-    npm install --emsdk="$HOME/emsdk"
+    npm install
     npm run build
 
     # Count build outputs

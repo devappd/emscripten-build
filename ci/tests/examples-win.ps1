@@ -21,9 +21,12 @@ if ($env:APPVEYOR -eq $true) {
     $commit="$env:TRAVIS_COMMIT"
 }
 
-# Assumes package.json value https://github.com/devappd/emscripten-build-npm/archive/master.tar.gz
-$EMSCRIPTEN_BUILD_SEARCH = "master.tar.gz"
+# Assumes package.json value https://github.com/devappd/emscripten-build-npm/archive/main.tar.gz
+$EMSCRIPTEN_BUILD_SEARCH = "main.tar.gz"
 $EMSCRIPTEN_BUILD_REPLACE = "$commit.tar.gz"
+
+# Explicitly set EMSDK install location to bypass Windows MAX_PATH
+Start-Process -FilePath 'npm' -ArgumentList ('config','set','emsdk="C:\emsdk"') -Wait -NoNewWindow
 
 Write-Host @"
 ########################################################################
@@ -65,7 +68,7 @@ foreach ($example in $examples) {
     Remove-Item -Recurse -Force .\dist\*
     
     # Node 11.x does not have npm.ps1, so run CMD
-    Start-Process -FilePath 'cmd.exe' -ArgumentList ("/c", "$($nodePath)npm.cmd", 'install', '--emsdk="C:\emsdk"') -Wait -NoNewWindow
+    Start-Process -FilePath 'cmd.exe' -ArgumentList ("/c", "$($nodePath)npm.cmd", 'install') -Wait -NoNewWindow
     Start-Process -FilePath 'cmd.exe' -ArgumentList ("/c", "$($nodePath)npm.cmd", 'run', 'build') -Wait -NoNewWindow
 
     # Count build outputs
