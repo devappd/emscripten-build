@@ -28,36 +28,41 @@ emscripten.build()
 
 ## Configuration
 
-You may pass a directory or file path that contains one of these files and
-this package will set defaults for your build environment:
+You may pass a directory or file path that contains a build configuration file:
 
 * `emscripten.build.js`
 * `CMakeLists.txt`
 * `./configure`
 * `Makefile`
 
-Without arguments, this package will look for the above files in the current working directory.
+If you do not specify a path, the above files will be searched in the current working directory.
+
+This example will build a project from `/path/to/CMakeLists.txt`:
 
 ```js
 const emscripten = require('emscripten-build');
 
-// Builds to <cwd>/build by default
 emscripten.build('/path/to/CMakeLists.txt')
-
-    // Installs (copies JS and WebAssembly) to <cwd>/dist by default
     .then(bootstrap => bootstrap.install());
 ```
 
-On the CLI:
+Or on the CLI:
 
 ```sh
-npx emscripten build /path/to/CMakeLists.txt && npx emscripten install /path/to/CMakeLists.txt
+# The default output path is relative to your CWD, so you should set CWD
+# to your JS <project_dir>.
+
+cd <project_dir>
+npx emscripten build /path/to/CMakeLists.txt
+npx emscripten install /path/to/CMakeLists.txt
 ```
 
-One of the files you may pass is `emscripten.config.js`. With this configuration file, you can manually
+One of the files you may pass is `emscripten.config.js`. With this configuration file, you may manually
 set build paths and compiler flags. A simple configuration file may look like this:
 
 ```js
+// Relative paths are resolved from the directory of `emscripten.config.js`
+
 module.exports = {
     "myProject": {
         "type": "cmake",
@@ -82,12 +87,14 @@ module.exports = {
 }
 ```
 
-Use on the CLI -- remember that the path argument is optional, and it defaults
-to searching in the current working directory:
+Or on the CLI:
 
 ```sh
-cd <project_dir>
-npx emscripten build /path/to/emscripten.config.js && npx emscripten install /path/to/emscripten.config.js
+# No need to set CWD here because default output path is resolved from
+# emscripten.config.js
+
+npx emscripten build /path/to/emscripten.config.js
+npx emscripten install /path/to/emscripten.config.js
 ```
 
 You can also pass the same config to the JS API:
@@ -101,7 +108,7 @@ emscripten.build(em_config['myProject'])
     .then(bootstrap => bootstrap.install());
 ```
 
-You may set different parameters for the `configure`, `build`, `install`, and `clean` steps. You may also list multiple named configs in this config file. See later in this document for the configuration format.
+You may set different parameters for the `configure`, `build`, `install`, and `clean` steps. You may also list multiple named configs in the `emscripten.config.js` file. See later in this document for the configuration format.
 
 ## Installation
 
@@ -112,18 +119,19 @@ This package works with Node.js 12.x or later.
 The install command is:
 
 ```sh
-npm install --emsdk='/your/custom/install/path' --save-dev git+https://github.com/devappd/emscripten-build-npm.git
+npm install --save-dev git+https://github.com/devappd/emscripten-build-npm.git
 ```
 
-Use the `--emsdk` switch to specify your own install path for the Emscripten SDK. This path is saved to your `npmrc` user config and it is referred to every time this package is installed.
+By default, EMSDK is installed into your `node_modules` tree. You may specify a custom path by
+[modifying your NPM config](https://docs.npmjs.com/cli/v6/using-npm/config) as follows:
 
-You should specify your own path in order to save disk space across duplicate `node_modules` installations. If you are running on Windows, the installation will fail if the install path is longer than 85 characters (per [emsdk#152](https://github.com/emscripten-core/emsdk/issues/152)). This is a certainty if you install globally with `-g`.
+* Commit the path to your user `.npmrc` -- `npm config set emsdk "/your/install/path"`
+* Set an environment variable -- `set NPM_CONFIG_EMSDK=/your/install/path`
+* Use a config argument to NPM temporarily -- `npm [command] --emsdk="/your/install/path"`
 
-In addition to the above switch, you may specify an install path via this command:
+You should specify your own path in order to save disk space. In addition, if you are running on Windows, EMSDK installation will fail if your install path is longer than 85 characters.
 
-```sh
-npm config set emsdk "/your/install/path"
-```
+### Dependencies
 
 This package installs these dependencies:
 
@@ -139,7 +147,7 @@ Usage of `make`, `configure`, `mingw32-make`, and any other build toolset, will
 require you to install those systems by yourself. Have those commands available
 in your PATH.
 
-If you have any issues with the environment, you may refer to [issue #15](https://github.com/devappd/emscripten-build-npm/issues/15) and [Emscripten's prerequisites](https://emscripten.org/docs/getting_started/downloads.html#platform-notes-installation-instructions-sdk) for guidance.
+If you have any issues with the environment, you may refer to [issue #1](https://github.com/devappd/emscripten-build-npm/issues/1) and [Emscripten's prerequisites](https://emscripten.org/docs/getting_started/downloads.html#platform-notes-installation-instructions-sdk) for guidance.
 
 ## Command Line Usage
 
@@ -156,14 +164,14 @@ will be selected.
 
 | Command | Description
 | ------- | -----------
-| `npx emscripten configure [config_locator]` | Configure the project.
-| `npx emscripten build [config_locator]` | Build the project and configure it first if necessary.
-| `npx emscripten clean [config_locator]` | Reset the project's build files.
-| `npx emscripten install [config_locator]` | Copy the project's build output into a target directory.
-| `npx emscripten reconfigure [config_locator]` | Clean the project then configure it.
-| `npx emscripten rebuild [config_locator]` | Clean the project, configure it, then build.
-| `npx emscripten compile [config_locator]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
-| `npx emscripten run <command> [arg...]` | Runs a given command under the context of the EMSDK environment.
+| `emscripten configure [config_locator]` | Configure the project.
+| `emscripten build [config_locator]` | Build the project and configure it first if necessary.
+| `emscripten clean [config_locator]` | Reset the project's build files.
+| `emscripten install [config_locator]` | Copy the project's build output into a target directory.
+| `emscripten reconfigure [config_locator]` | Clean the project then configure it.
+| `emscripten rebuild [config_locator]` | Clean the project, configure it, then build.
+| `emscripten compile [config_locator]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
+| `emscripten run <command> [arg...]` | Runs a given command under the context of the EMSDK environment.
 
 ## JavaScript Usage
 
@@ -354,8 +362,6 @@ Make does not have `configure` parameters. As such, the
 
 ## Autotools Configuration
 
-### Configure
-
 ```js
 {
     "type": "autotools",
@@ -422,8 +428,6 @@ Make does not have `configure` parameters. As such, the
 ```
 
 ## CMake Configuration
-
-### Configure
 
 ```js
 {
