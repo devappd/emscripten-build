@@ -102,7 +102,7 @@ export default class CMake extends Bootstrap {
 
   __buildConfigureArguments() {
     let args = [
-      this.config.configure.path,
+      `"${this.config.configure.path}"`,
       '-G', this.config.configure.generator,
       `-DCMAKE_BUILD_TYPE="${this.config.configure.type}"`,
       `-DCMAKE_INSTALL_PREFIX="${this.config.install.path}"`,
@@ -186,7 +186,7 @@ export default class CMake extends Bootstrap {
       args = args.concat([`-DCMAKE_MAKE_PROGRAM="${this.makeCommand}"`])
 
     await emsdk.run(this.configCommand,
-      [this.configSubCommand, ...args],
+      [`"${this.configSubCommand}"`, ...args],
       {cwd: this.config.build.path, shell: (process.platform === 'win32')}
     );
   }

@@ -4,6 +4,9 @@ Write-Output @"
 #
 # For each example project, install emscripten-build, then build,
 # then check if *.js and *.wasm exist in ./dist
+#
+# Also test if working correctly when paths have spaces in the project
+# dir and EMSDK dir.
 ########################################################################
 "@
 
@@ -26,7 +29,8 @@ $EMSCRIPTEN_BUILD_SEARCH = "main.tar.gz"
 $EMSCRIPTEN_BUILD_REPLACE = "$commit.tar.gz"
 
 # Explicitly set EMSDK install location to bypass Windows MAX_PATH
-Start-Process -FilePath 'npm' -ArgumentList ('config','set','emsdk="C:\emsdk"') -Wait -NoNewWindow
+# Test for space in path, per https://github.com/devappd/emscripten-build-npm/issues/9
+Start-Process -FilePath 'npm' -ArgumentList ('config','set','emsdk="C:\em sdk"') -Wait -NoNewWindow
 
 Write-Host @"
 ########################################################################
@@ -46,9 +50,10 @@ $examples = @(
     "Example-06-SDL-OpenGL"
 )
 
-Start-Process -FilePath 'git' -ArgumentList ('clone','https://github.com/devappd/emscripten-npm-examples') -Wait -NoNewWindow
+# Test for space in path, per https://github.com/devappd/emscripten-build-npm/issues/9
+Start-Process -FilePath 'git' -ArgumentList ('clone','https://github.com/devappd/emscripten-npm-examples','"emnpm examples"') -Wait -NoNewWindow
 
-Set-Location .\emscripten-npm-examples
+Set-Location ".\emnpm examples"
 $testRepoRoot = (Get-Location).Path
 
 foreach ($example in $examples) {

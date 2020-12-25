@@ -121,7 +121,7 @@ export default class Autotools extends Bootstrap {
     let configSubCommand = path.join(this.config.configure.path, this.configSubCommand);
 
     await emsdk.run(this.configCommand,
-      [configSubCommand, ...args],
+      [`"${configSubCommand}"`, ...args],
       {cwd: this.config.build.path, shell: (process.platform === 'win32')}
     );
   }
