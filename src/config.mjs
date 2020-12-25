@@ -146,14 +146,19 @@ export async function GetWorkingConfig(a, b) {
   
     case 1:
       if (typeof args[0] === 'string')
-        configLocator = args[0] || configLocator;
+        configLocator = args[0] || (configLocator || process.cwd());
       else
+        // Don't default configLocator to process.cwd(); the intent
+        // is to use configFragment as the sole config.
         configFragment = args[0] || configFragment;
       break;
   
     case 2:
     default:
       if (typeof args[0] === 'string') {
+        // Don't default to process.cwd(); the intent is to explicitly
+        // set configLocator. If null, then configFragment shall be
+        // the sole config.
         configLocator = args[0] || configLocator;
         configFragment = args[1] || configFragment;
       } else
