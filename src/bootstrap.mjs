@@ -22,6 +22,72 @@ export default class Bootstrap {
       this.settings.emsdkVersion = 'latest';
   }
 
+  _validateDefinitionSettings(stepSettings) {
+    // "macros" is an alias for "definitions"
+    if ('macros' in stepSettings) {
+      if ('definitions' in stepSettings)
+        throw new RangeError('"macros" and "definitions" cannot both exist in your selected settings.');
+
+      // Mutate the settings object and reassign "macros" to "definitions"
+      delete Object.assign(stepSettings, {['definitions']: stepSettings['macros'] })['macros'];
+    }
+
+    if (!('definitions' in stepSettings))
+      stepSettings.definitions = [];
+
+    // Convert objects to [ [ key, val ], [ key, val ], ... ]
+    if (stepSettings.definitions instanceof Map)
+      stepSettings.definitions = [...stepSettings.definitions.entries()];
+    else if (!Array.isArray(stepSettings.definitions)) {
+      if (typeof stepSettings.definitions !== 'object')
+        throw new RangeError(`Invalid "definitions" in your selected settings: ${stepSettings.definitions}`);
+      stepSettings.definitions = Object.entries(stepSettings.definitions);
+    }
+
+    // Enforce two-element array members
+    stepSettings.definitions = stepSettings.definitions.map(elem => {
+      let result;
+
+      // Presume that non-array elements are macros without a value
+      if (!Array.isArray(elem))
+        result = [ elem, null ];
+      
+      switch (elem.length) {
+        case 0:
+          throw new RangeError('"definitions" in your selected settings includes an empty element.');
+        case 1:
+          // Presume this is a macro without a value
+          result = elem.concat(null);
+          break;
+        case 2:
+          result = elem;
+          break;
+        default:
+          throw new RangeError(`"definitions" in your selected settings contains an element with greater than two values: ${elem}`);
+      }
+
+      // Check invalid definition keys
+      if (!(typeof result[0] === 'string'))
+        throw new RangeError(`"definitions" has an invalid key, must be string: ${result[0]}`);
+      
+      // Mutate element key tby trimming
+      result[0] = result[0].trim();
+      if (!result[0])
+        throw new RangeError(`"definitions" has an empty key, must be non-empty after trimming: ${result}`);
+
+      // Check invalid value objects
+      if (typeof result[1] === 'object' && result[1] !== null) {
+        // Presume this is a macro without a value
+        if (!Object.keys(result[1]).length)
+          result[1] = null;
+        else if ('type' in result[1] && !('value' in result[1]))
+          throw new RangeError(`definitions has a value where "type" is specified but "value" is not: ${result[0]}, ${result[1]}`);
+      }
+      
+      return result;
+    });
+  }
+
 ////////////////////////////////////////////////////////////////////////
 // Implementations
 ////////////////////////////////////////////////////////////////////////

@@ -96,6 +96,72 @@ class Bootstrap {
       this.settings.emsdkVersion = 'latest';
   }
 
+  _validateDefinitionSettings(stepSettings) {
+    // "macros" is an alias for "definitions"
+    if ('macros' in stepSettings) {
+      if ('definitions' in stepSettings)
+        throw new RangeError('"macros" and "definitions" cannot both exist in your selected settings.');
+
+      // Mutate the settings object and reassign "macros" to "definitions"
+      delete Object.assign(stepSettings, {['definitions']: stepSettings['macros'] })['macros'];
+    }
+
+    if (!('definitions' in stepSettings))
+      stepSettings.definitions = [];
+
+    // Convert objects to [ [ key, val ], [ key, val ], ... ]
+    if (stepSettings.definitions instanceof Map)
+      stepSettings.definitions = [...stepSettings.definitions.entries()];
+    else if (!Array.isArray(stepSettings.definitions)) {
+      if (typeof stepSettings.definitions !== 'object')
+        throw new RangeError(`Invalid "definitions" in your selected settings: ${stepSettings.definitions}`);
+      stepSettings.definitions = Object.entries(stepSettings.definitions);
+    }
+
+    // Enforce two-element array members
+    stepSettings.definitions = stepSettings.definitions.map(elem => {
+      let result;
+
+      // Presume that non-array elements are macros without a value
+      if (!Array.isArray(elem))
+        result = [ elem, null ];
+      
+      switch (elem.length) {
+        case 0:
+          throw new RangeError('"definitions" in your selected settings includes an empty element.');
+        case 1:
+          // Presume this is a macro without a value
+          result = elem.concat(null);
+          break;
+        case 2:
+          result = elem;
+          break;
+        default:
+          throw new RangeError(`"definitions" in your selected settings contains an element with greater than two values: ${elem}`);
+      }
+
+      // Check invalid definition keys
+      if (!(typeof result[0] === 'string'))
+        throw new RangeError(`"definitions" has an invalid key, must be string: ${result[0]}`);
+      
+      // Mutate element key tby trimming
+      result[0] = result[0].trim();
+      if (!result[0])
+        throw new RangeError(`"definitions" has an empty key, must be non-empty after trimming: ${result}`);
+
+      // Check invalid value objects
+      if (typeof result[1] === 'object' && result[1] !== null) {
+        // Presume this is a macro without a value
+        if (!Object.keys(result[1]).length)
+          result[1] = null;
+        else if ('type' in result[1] && !('value' in result[1]))
+          throw new RangeError(`definitions has a value where "type" is specified but "value" is not: ${result[0]}, ${result[1]}`);
+      }
+      
+      return result;
+    });
+  }
+
 ////////////////////////////////////////////////////////////////////////
 // Implementations
 ////////////////////////////////////////////////////////////////////////
@@ -478,6 +544,8 @@ class CMake extends Bootstrap {
 
     if (!this.settings.configure.type)
       this.settings.configure.type = 'Release';
+    
+    this._validateDefinitionSettings(this.settings.configure);
 
     if (!this.settings.configure.arguments)
       this.settings.configure.arguments = [];
@@ -559,6 +627,41 @@ class CMake extends Bootstrap {
     return args;
   }
 
+  __buildDefinitions(definitions) {
+    const prefix = '-D';
+    let args = [];
+
+    for (let [key, val] of definitions) {
+      let argString = `${prefix}${key}`;
+
+      if (typeof val === 'object' && val !== null) {
+        if ( 'type' in val)
+          argString = argString.concat(`:${val.type}`);
+
+        // if this object conforms to our format ({type:'...', value: '...'}), then convert to string
+        // else, stringify the entire object on routine end
+        if ('value' in val)
+          val = val.value;
+      }
+
+      if (typeof val === 'string')
+        val = val.replace('"', '\"');
+      
+      // interpret "true"/"false" as "ON"/"OFF"
+      if (val === true)
+        val = "ON";
+      else if (val === false)
+        val = "OFF";
+      else if (val === null)
+        val = "";
+
+      // stringify everything else
+      args.push(`"${argString.concat(`=${val}`)}"`);
+    }
+
+    return args;
+  }
+
   // Populate this.makeCommand
   async __determineMake(fromCache = false) {
     // Populate this.makeCommand instead of this.makeSubCommand
@@ -617,13 +720,14 @@ class CMake extends Bootstrap {
   async _configure() {
     await this.__determineMake();
 
+    let defs = this.__buildDefinitions(this.settings.configure.definitions);
     let args = this.__buildConfigureArguments();
 
     if (this.makeCommand)
       args = args.concat([`-DCMAKE_MAKE_PROGRAM="${this.makeCommand}"`]);
 
     await emsdk__default['default'].run(this.configCommand,
-      [`"${this.configSubCommand}"`, ...args],
+      [`"${this.configSubCommand}"`, ...args, ...defs],
       {cwd: this.settings.build.path, shell: (process.platform === 'win32')}
     );
   }
@@ -731,6 +835,8 @@ class Make extends Bootstrap {
     if (!('target' in this.settings[stepKey]))
       this.settings[stepKey].target = targetName;
 
+    this._validateDefinitionSettings(this.settings[stepKey]);
+
     if (!this.settings[stepKey].arguments)
       this.settings[stepKey].arguments = [];
     else if (!Array.isArray(this.settings[stepKey].arguments))
@@ -756,6 +862,45 @@ class Make extends Bootstrap {
   }
 
 ////////////////////////////////////////////////////////////////////////
+// Implementation Helpers
+////////////////////////////////////////////////////////////////////////
+
+  __buildDefinitions(definitions) {
+    const prefix = '';
+    let args = [];
+
+    for (let [key, val] of definitions) {
+      let argString = `${prefix}${key}`;
+
+      if (typeof val === 'object' && val !== null) {
+
+        // if this object conforms to our format ({type:'...', value: '...'}), then convert to string
+        // else, stringify the entire object on routine end
+        if ('value' in val)
+          val = val.value;
+      }
+
+      if (typeof val === 'string')
+        val = val.replace('"', '\"');
+      
+      // interpret "true"/"false" as "1"/"0"
+      if (val === true)
+        val = "1";
+      else if (val === false)
+        val = "0";
+        
+      // "null" means push the key without a definition
+      if (val === null)
+        args.push(`"${argString}"`);
+      // stringify everything else
+      else
+        args.push(`"${argString.concat(`=${val}`)}"`);
+    }
+
+    return args;
+  }
+
+////////////////////////////////////////////////////////////////////////
 // Implementations
 ////////////////////////////////////////////////////////////////////////
 
@@ -765,11 +910,12 @@ class Make extends Bootstrap {
 
   async __make(stepSettings) {
     // build args
+    let defs = this.__buildDefinitions(stepSettings.definitions);
     let args;
     if (stepSettings.target)
-      args = [this.makeSubCommand, stepSettings.target, ...stepSettings.arguments];
+      args = [this.makeSubCommand, stepSettings.target, ...stepSettings.arguments, ...defs];
     else
-      args = [this.makeSubCommand, ...stepSettings.arguments];
+      args = [this.makeSubCommand, ...stepSettings.arguments, ...defs];
 
     // Make is called on the "build" path specifically.
     await emsdk__default['default'].run(this.makeCommand, args,

@@ -73,9 +73,9 @@ module.exports = {
             "path": "./src",
             "generator": "Ninja",
             "type": "Release",
-            "arguments": [
-                "-DDEFINE1=\"Value1\""
-            ]
+            "definitions": {
+                "DEFINE1": "Value1"
+            }
         },
 
         "build": {
@@ -324,6 +324,9 @@ module.exports = {
 Make does not have `configure` parameters. As such, the
 `emscripten.configure()` call has no effect for Make configs.
 
+To specify a preprocessor definition without a value (e.g., `"CUSTOM1"`), specify the value as `null`.
+`true` is expressed as `1` and `false` is expressed as `0`. All other values are stringified.
+
 ```js
 {
     "type": "make",
@@ -336,10 +339,20 @@ Make does not have `configure` parameters. As such, the
         // Default: None
         "target": "targetName",
 
-        // Arguments to pass to Make
+        // Macro definitions.
+        // These are passed as "DEFINE1=VAL 1" with double quotes surrounding.
+        // See "Variable Definitions" below for complete usage.
+        // Default: {}
+        "definitions": {
+            "DEFINE1": "VAL 1",
+            "DEFINE2": "VAL 2"
+        }
+
+        // Arguments to pass to Make.
+        // These are passed before macro definitions.
         // Default: []
         "arguments": [
-            "-j", "4", "-DFLAG", "-DDEFINE1=value1", "-DDEFINE2=value2"
+            "-j", "4"
         ]
     },
 
@@ -348,7 +361,17 @@ Make does not have `configure` parameters. As such, the
         // Default: "install"
         "target": "targetName",
 
+        // Macro definitions.
+        // These are passed as "DEFINE1=VAL 1" with double quotes surrounding.
+        // See "Variable Definitions" below for complete usage.
+        // Default: {}
+        "definitions": {
+            "DEFINE1": "value1",
+            "DEFINE2": "value2"
+        }
+
         // Arguments to pass to Make
+        // These are passed before macro definitions.
         // Default: []
         "arguments": [ /* ... */ ]
     },
@@ -358,7 +381,17 @@ Make does not have `configure` parameters. As such, the
         // Default: "clean"
         "target": "targetName",
 
+        // Macro definitions.
+        // These are passed as "DEFINE1=VAL 1" with double quotes surrounding.
+        // See "Variable Definitions" below for complete usage.
+        // Default: {}
+        "definitions": {
+            "DEFINE1": "VAL 1",
+            "DEFINE2": "VAL 2"
+        }
+
         // Arguments to pass to Make
+        // These are passed before macro definitions.
         // Default: []
         "arguments": [ /* ... */ ]
     }
@@ -366,6 +399,8 @@ Make does not have `configure` parameters. As such, the
 ```
 
 ## Autotools Configuration
+
+Preprocessor definitions are not supported for Autotools. Instead, specify the definitions as part of your `arguments`.
 
 ```js
 {
@@ -378,8 +413,7 @@ Make does not have `configure` parameters. As such, the
         // Command line arguments to pass to ./configure.
         // Default: []
         "arguments": [
-            "-DCUSTOM1=\"VAL 1\"",
-            "-DCUSTOM1=\"VAL 2\""
+            "CPPFLAGS=-DCUSTOM1=VAL"
         ]
     },
 
@@ -434,6 +468,8 @@ Make does not have `configure` parameters. As such, the
 
 ## CMake Configuration
 
+When specifying a cache definition, the value `true` is expressed as `ON` and the value `false` is expressed as `OFF`. All other values are stringified.
+
 ```js
 {
     "type": "cmake",
@@ -452,12 +488,19 @@ Make does not have `configure` parameters. As such, the
         // Possible: "Debug"|"Release"|"RelWithDebInfo"|etc.
         "type": "Release",
 
-        // Extra command line arguments, e.g., cache defines.
+        // Cache definitions.
+        // These are passed as "-DCUSTOM1=VAL 1" with double quotes surrounding.
+        // See "Variable Definitions" below for complete usage.
+        // Default: {}
+        "definitions": {
+            "CUSTOM1": "VAL 1",
+            "CUSTOM2": "VAL 2"
+        }
+
+        // Extra command line arguments.
+        // These are passed before cache definitions.
         // Default: []
-        "arguments": [
-            "-DCUSTOM1=\"VAL 1\"",
-            "-DCUSTOM1=\"VAL 2\""
-        ]
+        "arguments": [ /* ... */ ]
     },
 
     "build": {
@@ -508,6 +551,54 @@ Make does not have `configure` parameters. As such, the
     }
 }
 ```
+
+## Variable Definitions
+
+You may specify preprocessor definitions under Make and CMake settings like so:
+
+```js
+{
+    /* ... */
+
+    "definitions": {
+        "CUSTOM1": "VAL 1",
+        "CUSTOM2": "VAL 2"
+    }
+}
+```
+
+The above syntax presumes unique, case-sensitive keys, and order is not guaranteed. If you need the
+definitions in a specific order, use this syntax:
+
+```js
+{
+    /* ... */
+
+    "definitions": [
+        [ "CUSTOM1", "VAL 1" ],
+        [ "CUSTOM2", "VAL 2" ]
+    ]
+}
+```
+
+CMake allows you to specify a variable type for each definition, which is passed as `"-D<key>:<type>=<value>"`.
+Specify the type as follows:
+
+```js
+{
+    /* ... */
+
+    "definitions": {
+        "CUSTOM1": {
+            "type": "BOOL",
+            "value": "ON"
+        }
+    }
+}
+```
+
+You may specify preprocessor definitions for Make build, install, and clean steps; as well as CMake configure
+steps.
 
 ## License
 

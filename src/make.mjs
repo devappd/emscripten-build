@@ -31,6 +31,8 @@ export default class Make extends Bootstrap {
     if (!('target' in this.settings[stepKey]))
       this.settings[stepKey].target = targetName;
 
+    this._validateDefinitionSettings(this.settings[stepKey]);
+
     if (!this.settings[stepKey].arguments)
       this.settings[stepKey].arguments = [];
     else if (!Array.isArray(this.settings[stepKey].arguments))
@@ -56,6 +58,48 @@ export default class Make extends Bootstrap {
   }
 
 ////////////////////////////////////////////////////////////////////////
+// Implementation Helpers
+////////////////////////////////////////////////////////////////////////
+
+  __buildDefinitions(definitions) {
+    const prefix = '';
+    const processTypes = false;
+    let args = [];
+
+    for (let [key, val] of definitions) {
+      let argString = `${prefix}${key}`;
+
+      if (typeof val === 'object' && val !== null) {
+        if (processTypes && 'type' in val)
+          argString = argString.concat(`:${val.type}`);
+
+        // if this object conforms to our format ({type:'...', value: '...'}), then convert to string
+        // else, stringify the entire object on routine end
+        if ('value' in val)
+          val = val.value;
+      }
+
+      if (typeof val === 'string')
+        val = val.replace('"', '\"');
+      
+      // interpret "true"/"false" as "1"/"0"
+      if (val === true)
+        val = "1";
+      else if (val === false)
+        val = "0";
+        
+      // "null" means push the key without a definition
+      if (val === null)
+        args.push(`"${argString}"`);
+      // stringify everything else
+      else
+        args.push(`"${argString.concat(`=${val}`)}"`);
+    }
+
+    return args;
+  }
+
+////////////////////////////////////////////////////////////////////////
 // Implementations
 ////////////////////////////////////////////////////////////////////////
 
@@ -65,11 +109,12 @@ export default class Make extends Bootstrap {
 
   async __make(stepSettings) {
     // build args
+    let defs = this.__buildDefinitions(stepSettings.definitions);
     let args;
     if (stepSettings.target)
-      args = [this.makeSubCommand, stepSettings.target, ...stepSettings.arguments];
+      args = [this.makeSubCommand, stepSettings.target, ...stepSettings.arguments, ...defs];
     else
-      args = [this.makeSubCommand, ...stepSettings.arguments];
+      args = [this.makeSubCommand, ...stepSettings.arguments, ...defs];
 
     // Make is called on the "build" path specifically.
     await emsdk.run(this.makeCommand, args,

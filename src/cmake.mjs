@@ -41,6 +41,8 @@ export default class CMake extends Bootstrap {
 
     if (!this.settings.configure.type)
       this.settings.configure.type = 'Release';
+    
+    this._validateDefinitionSettings(this.settings.configure);
 
     if (!this.settings.configure.arguments)
       this.settings.configure.arguments = [];
@@ -122,6 +124,42 @@ export default class CMake extends Bootstrap {
     return args;
   }
 
+  __buildDefinitions(definitions) {
+    const prefix = '-D';
+    const processTypes = true;
+    let args = [];
+
+    for (let [key, val] of definitions) {
+      let argString = `${prefix}${key}`;
+
+      if (typeof val === 'object' && val !== null) {
+        if (processTypes && 'type' in val)
+          argString = argString.concat(`:${val.type}`);
+
+        // if this object conforms to our format ({type:'...', value: '...'}), then convert to string
+        // else, stringify the entire object on routine end
+        if ('value' in val)
+          val = val.value;
+      }
+
+      if (typeof val === 'string')
+        val = val.replace('"', '\"');
+      
+      // interpret "true"/"false" as "ON"/"OFF"
+      if (val === true)
+        val = "ON";
+      else if (val === false)
+        val = "OFF";
+      else if (val === null)
+        val = "";
+
+      // stringify everything else
+      args.push(`"${argString.concat(`=${val}`)}"`);
+    }
+
+    return args;
+  }
+
   // Populate this.makeCommand
   async __determineMake(fromCache = false) {
     // Populate this.makeCommand instead of this.makeSubCommand
@@ -180,13 +218,14 @@ export default class CMake extends Bootstrap {
   async _configure() {
     await this.__determineMake();
 
+    let defs = this.__buildDefinitions(this.settings.configure.definitions);
     let args = this.__buildConfigureArguments();
 
     if (this.makeCommand)
       args = args.concat([`-DCMAKE_MAKE_PROGRAM="${this.makeCommand}"`])
 
     await emsdk.run(this.configCommand,
-      [`"${this.configSubCommand}"`, ...args],
+      [`"${this.configSubCommand}"`, ...args, ...defs],
       {cwd: this.settings.build.path, shell: (process.platform === 'win32')}
     );
   }
