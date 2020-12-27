@@ -75,8 +75,8 @@ async function ActivateEmSDK(version = 'latest') {
 }
 
 class Bootstrap {
-  constructor(workingConfig) {
-    this.config = workingConfig;
+  constructor(workingSettings) {
+    this.settings = workingSettings;
 
     this.configCommand = null;
     this.configSubCommand = null;
@@ -89,10 +89,10 @@ class Bootstrap {
 // Config validation
 ////////////////////////////////////////////////////////////////////////
 
-  _validateEmsdkConfig() {
-    if (!('emsdkVersion' in this.config)
-        || !this.config.emsdkVersion)
-      this.config.emsdkVersion = 'latest';
+  _validateEmsdkSettings() {
+    if (!('emsdkVersion' in this.settings)
+        || !this.settings.emsdkVersion)
+      this.settings.emsdkVersion = 'latest';
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -141,8 +141,8 @@ class Bootstrap {
 
   async __preCommand() {
     // emsdkVersion defaults to 'latest' and is guaranteed to be
-    // in this.config
-    await ActivateEmSDK(this.config.emsdkVersion);
+    // in this.settings
+    await ActivateEmSDK(this.settings.emsdkVersion);
   }
 
   async _bindCommand(impl, ...args) {
@@ -444,84 +444,84 @@ function TryResolvePath(relativePath, rootPath) {
 }
 
 class CMake extends Bootstrap {
-  constructor(workingConfig) {
-    super(workingConfig);
+  constructor(workingSettings) {
+    super(workingSettings);
 
     this.configCommand = 'emcmake';
     this.configSubCommand = 'cmake';
 
-    this.__validateConfig();
+    this.__validateSettings();
   }
 
 ////////////////////////////////////////////////////////////////////////
 // Config validation
 ////////////////////////////////////////////////////////////////////////
 
-  __validateConfig() {
-    this.__validateConfigureConfig();
-    this.__validateBuildConfig();
-    this.__validateCleanConfig();
-    this.__validateInstallConfig();
-    this._validateEmsdkConfig();
+  __validateSettings() {
+    this.__validateConfigureSettings();
+    this.__validateBuildSettings();
+    this.__validateCleanSettings();
+    this.__validateInstallSettings();
+    this._validateEmsdkSettings();
   }
 
-  __validateConfigureConfig() {
-    if (!('configure' in this.config)
-        || !('path' in this.config.configure))
-      throw new RangeError('Configure config must have configure.path set to your source directory (which contains CMakeLists.txt).');
+  __validateConfigureSettings() {
+    if (!('configure' in this.settings)
+        || !('path' in this.settings.configure))
+      throw new RangeError('Configure settings must have configure.path set to your source directory (which contains CMakeLists.txt).');
     else
-      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config.configPath);
+      this.settings.configure.path = TryResolvePath(this.settings.configure.path, this.settings.configPath);
 
-    if (!this.config.configure.generator)
-      this.config.configure.generator = 'Ninja';
+    if (!this.settings.configure.generator)
+      this.settings.configure.generator = 'Ninja';
 
-    if (!this.config.configure.type)
-      this.config.configure.type = 'Release';
+    if (!this.settings.configure.type)
+      this.settings.configure.type = 'Release';
 
-    if (!this.config.configure.arguments)
-      this.config.configure.arguments = [];
-    else if (!Array.isArray(this.config.configure.arguments))
-      this.config.configure.arguments = [this.config.configure.arguments];
+    if (!this.settings.configure.arguments)
+      this.settings.configure.arguments = [];
+    else if (!Array.isArray(this.settings.configure.arguments))
+      this.settings.configure.arguments = [this.settings.configure.arguments];
   }
 
-  __validateMakeConfig(configKey, targetName = null, defaultPath = null) {
-    if (!(configKey in this.config))
-      this.config[configKey] = {};
+  __validateMakeSettings(stepKey, targetName = null, defaultPath = null) {
+    if (!(stepKey in this.settings))
+      this.settings[stepKey] = {};
 
-    if (defaultPath && !this.config[configKey].path)
-      this.config[configKey].path = defaultPath;
+    if (defaultPath && !this.settings[stepKey].path)
+      this.settings[stepKey].path = defaultPath;
     
-    if (this.config[configKey].path)
-      this.config[configKey].path = TryResolvePath(this.config[configKey].path, this.config.configPath);
+    if (this.settings[stepKey].path)
+      this.settings[stepKey].path = TryResolvePath(this.settings[stepKey].path, this.settings.configPath);
 
-    if (!this.config[configKey].target)
-      this.config[configKey].target = targetName;
+    if (!this.settings[stepKey].target)
+      this.settings[stepKey].target = targetName;
 
-    if (!this.config[configKey].arguments)
-      this.config[configKey].arguments = [];
-    else if (!Array.isArray(this.config[configKey].arguments))
-      this.config[configKey].arguments = [this.config[configKey].arguments];
+    if (!this.settings[stepKey].arguments)
+      this.settings[stepKey].arguments = [];
+    else if (!Array.isArray(this.settings[stepKey].arguments))
+      this.settings[stepKey].arguments = [this.settings[stepKey].arguments];
   }
 
-  __validateBuildConfig() {
-    this.__validateMakeConfig('build', null, './build');
+  __validateBuildSettings() {
+    this.__validateMakeSettings('build', null, './build');
   }
 
-  __validateCleanConfig() {
-    this.__validateMakeConfig('clean', 'clean');
+  __validateCleanSettings() {
+    this.__validateMakeSettings('clean', 'clean');
   }
 
-  __validateInstallConfig() {
-    this.__validateMakeConfig('install', 'install', './dist');
+  __validateInstallSettings() {
+    this.__validateMakeSettings('install', 'install', './dist');
 
-    if (this.config.install.binaryPath)
-      this.config.install.binaryPath = TryResolvePath(this.config.install.binaryPath, this.config.configPath);
+    if (this.settings.install.binaryPath)
+      this.settings.install.binaryPath = TryResolvePath(this.settings.install.binaryPath, this.settings.configPath);
 
-    if (this.config.install.libraryPath)
-      this.config.install.libraryPath = TryResolvePath(this.config.install.libraryPath, this.config.configPath);
+    if (this.settings.install.libraryPath)
+      this.settings.install.libraryPath = TryResolvePath(this.settings.install.libraryPath, this.settings.configPath);
 
-    if (this.config.install.includePath)
-      this.config.install.includePath = TryResolvePath(this.config.install.includePath, this.config.configPath);
+    if (this.settings.install.includePath)
+      this.settings.install.includePath = TryResolvePath(this.settings.install.includePath, this.settings.configPath);
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -529,31 +529,31 @@ class CMake extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   async __ensureConfigure() {
-    if(!fs__default['default'].existsSync(path__default['default'].join(this.config.build.path, "CMakeCache.txt"))) {
+    if(!fs__default['default'].existsSync(path__default['default'].join(this.settings.build.path, "CMakeCache.txt"))) {
       await this._bindConfigCommand(this._configure);
       // make sure to reload the make variables after configuring
-      await this.__determineMake(!!this.config.configure.generator);
+      await this.__determineMake(!!this.settings.configure.generator);
     }
   }
 
   __buildConfigureArguments() {
     let args = [
-      `"${this.config.configure.path}"`,
-      '-G', this.config.configure.generator,
-      `-DCMAKE_BUILD_TYPE="${this.config.configure.type}"`,
-      `-DCMAKE_INSTALL_PREFIX="${this.config.install.path}"`,
+      `"${this.settings.configure.path}"`,
+      '-G', this.settings.configure.generator,
+      `-DCMAKE_BUILD_TYPE="${this.settings.configure.type}"`,
+      `-DCMAKE_INSTALL_PREFIX="${this.settings.install.path}"`,
     ];
 
-    if (this.config.install.binaryPath)
-      args.push(`-DCMAKE_INSTALL_BINDIR="${this.config.install.binaryPath}"`);
+    if (this.settings.install.binaryPath)
+      args.push(`-DCMAKE_INSTALL_BINDIR="${this.settings.install.binaryPath}"`);
 
-    if (this.config.install.libraryPath)
-      args.push(`-DCMAKE_INSTALL_LIBDIR="${this.config.install.libraryPath}"`);
+    if (this.settings.install.libraryPath)
+      args.push(`-DCMAKE_INSTALL_LIBDIR="${this.settings.install.libraryPath}"`);
 
-    if (this.config.install.includePath)
-      args.push(`-DCMAKE_INSTALL_INCLUDEDIR="${this.config.install.includePath}"`);
+    if (this.settings.install.includePath)
+      args.push(`-DCMAKE_INSTALL_INCLUDEDIR="${this.settings.install.includePath}"`);
 
-    args.push(...this.config.configure.arguments);
+    args.push(...this.settings.configure.arguments);
 
     return args;
   }
@@ -564,15 +564,15 @@ class CMake extends Bootstrap {
     // because we call these executables directly
     // instead of thru an emsdk script.
 
-    if (fromCache && !IsDir(this.config.build.path))
+    if (fromCache && !IsDir(this.settings.build.path))
       // Nothing to do
       return;
 
-    let generator = this.config.configure.generator.toLowerCase();
+    let generator = this.settings.configure.generator.toLowerCase();
 
     // Ninja
     let hasNinja = fromCache
-      ? fs__default['default'].existsSync(path__default['default'].join(this.config.build.path, 'build.ninja'))
+      ? fs__default['default'].existsSync(path__default['default'].join(this.settings.build.path, 'build.ninja'))
       : generator === 'ninja';
 
     if (hasNinja) {
@@ -585,7 +585,7 @@ class CMake extends Bootstrap {
     // Makefiles
     // test for 'Unix Makefiles', 'MinGW Makefiles', etc.
     let hasMake = fromCache
-      ? fs__default['default'].existsSync(path__default['default'].join(this.config.build.path, 'Makefile'))
+      ? fs__default['default'].existsSync(path__default['default'].join(this.settings.build.path, 'Makefile'))
       : generator.includes('makefiles');
 
     if (hasMake) {
@@ -598,7 +598,7 @@ class CMake extends Bootstrap {
     // MSBuild
     // test for 'Visual Studio 14', etc.
     let hasVS = fromCache
-      ? (glob__default['default'].sync("*.sln", { cwd: this.config.build.path }).length > 0)
+      ? (glob__default['default'].sync("*.sln", { cwd: this.settings.build.path }).length > 0)
       : generator.includes('visual studio ');
 
     if (hasVS) {
@@ -623,20 +623,20 @@ class CMake extends Bootstrap {
 
     await emsdk__default['default'].run(this.configCommand,
       [`"${this.configSubCommand}"`, ...args],
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.settings.build.path, shell: (process.platform === 'win32')}
     );
   }
 
-  async __make(subconfig) {
+  async __make(stepSettings) {
     // Make sure everything's configured before building.
     await this.__ensureConfigure();
 
     // build args
     let args;
-    if (subconfig.target)
-      args = [subconfig.target, ...subconfig.arguments];
+    if (stepSettings.target)
+      args = [stepSettings.target, ...stepSettings.arguments];
     else
-      args = [...subconfig.arguments];
+      args = [...stepSettings.arguments];
 
     // note we do not use this.makeSubCommand because
     // we call the makeCommand directly instead of thru
@@ -644,20 +644,20 @@ class CMake extends Bootstrap {
     //
     // Make is called on the build path specifically.
     await emsdk__default['default'].run(this.makeCommand, args,
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.settings.build.path, shell: (process.platform === 'win32')}
     );
   }
 
   async _build() {
-    await this.__make(this.config.build);
+    await this.__make(this.settings.build);
   }
 
   async _clean() {
-    await this.__make(this.config.clean);
+    await this.__make(this.settings.clean);
   }
 
   async _install() {
-    await this.__make(this.config.install);
+    await this.__make(this.settings.install);
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -665,7 +665,7 @@ class CMake extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   __ensureBuildDirExists() {
-    let result = shelljs__default['default'].mkdir('-p', this.config.build.path);
+    let result = shelljs__default['default'].mkdir('-p', this.settings.build.path);
     if (result.code !== 0)
       throw new Error(result.stderr);
   }
@@ -682,7 +682,7 @@ class CMake extends Bootstrap {
 
   async _bindMakeCommand(impl, ...args) {
     // Throws error if build command is not found.
-    await this.__determineMake(!!this.config.configure.generator);
+    await this.__determineMake(!!this.settings.configure.generator);
     
     this.__ensureBuildDirExists();
 
@@ -694,7 +694,7 @@ class CMake extends Bootstrap {
     await checkCMakeInstalled();
     this.configSubCommand = cMakeCommand;
 
-    await this.__determineMake(!!this.config.configure.generator);
+    await this.__determineMake(!!this.settings.configure.generator);
 
     this.__ensureBuildDirExists();
 
@@ -703,55 +703,55 @@ class CMake extends Bootstrap {
 }
 
 class Make extends Bootstrap {
-  constructor(workingConfig) {
-    super(workingConfig);
+  constructor(workingSettings) {
+    super(workingSettings);
 
     this.makeCommand = 'emmake';
     this.makeSubCommand = makeCommand;
 
-    this.__validateConfig();
+    this.__validateSettings();
   }
 
 ////////////////////////////////////////////////////////////////////////
 // Config validation
 ////////////////////////////////////////////////////////////////////////
 
-  __validateConfig() {
-    this.__validateBuildConfig();
-    this.__validateCleanConfig();
-    this.__validateInstallConfig();
-    this._validateEmsdkConfig();
+  __validateSettings() {
+    this.__validateBuildSettings();
+    this.__validateCleanSettings();
+    this.__validateInstallSettings();
+    this._validateEmsdkSettings();
   }
 
-  __validateMakeConfig(configKey, targetName = null) {
-    if (!(configKey in this.config))
-      this.config[configKey] = {};
+  __validateMakeSettings(stepKey, targetName = null) {
+    if (!(stepKey in this.settings))
+      this.settings[stepKey] = {};
 
-    if (!('target' in this.config[configKey]))
-      this.config[configKey].target = targetName;
+    if (!('target' in this.settings[stepKey]))
+      this.settings[stepKey].target = targetName;
 
-    if (!this.config[configKey].arguments)
-      this.config[configKey].arguments = [];
-    else if (!Array.isArray(this.config[configKey].arguments))
-      this.config[configKey].arguments = [this.config[configKey].arguments];
+    if (!this.settings[stepKey].arguments)
+      this.settings[stepKey].arguments = [];
+    else if (!Array.isArray(this.settings[stepKey].arguments))
+      this.settings[stepKey].arguments = [this.settings[stepKey].arguments];
   }
 
-  __validateBuildConfig() {
-    if (!('build' in this.config)
-        || !('path' in this.config.build))
-      throw new RangeError('Build config must have build.path set to your source directory (which contains Makefile).');
+  __validateBuildSettings() {
+    if (!('build' in this.settings)
+        || !('path' in this.settings.build))
+      throw new RangeError('Build settings must have build.path set to your source directory (which contains Makefile).');
     else
-      this.config.build.path = TryResolvePath(this.config.build.path, this.config.configPath);
+      this.settings.build.path = TryResolvePath(this.settings.build.path, this.settings.configPath);
     
-    this.__validateMakeConfig('build', null);
+    this.__validateMakeSettings('build', null);
   }
 
-  __validateCleanConfig() {
-    this.__validateMakeConfig('clean', 'clean');
+  __validateCleanSettings() {
+    this.__validateMakeSettings('clean', 'clean');
   }
 
-  __validateInstallConfig() {
-    this.__validateMakeConfig('install', 'install');
+  __validateInstallSettings() {
+    this.__validateMakeSettings('install', 'install');
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -762,30 +762,30 @@ class Make extends Bootstrap {
     // Nothing to do, make is not configurable
   }
 
-  async __make(subconfig) {
+  async __make(stepSettings) {
     // build args
     let args;
-    if (subconfig.target)
-      args = [this.makeSubCommand, subconfig.target, ...subconfig.arguments];
+    if (stepSettings.target)
+      args = [this.makeSubCommand, stepSettings.target, ...stepSettings.arguments];
     else
-      args = [this.makeSubCommand, ...subconfig.arguments];
+      args = [this.makeSubCommand, ...stepSettings.arguments];
 
     // Make is called on the "build" path specifically.
     await emsdk__default['default'].run(this.makeCommand, args,
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.settings.build.path, shell: (process.platform === 'win32')}
     );
   }
 
   async _build() {
-    await this.__make(this.config.build);
+    await this.__make(this.settings.build);
   }
 
   async _clean() {
-    await this.__make(this.config.clean);
+    await this.__make(this.settings.clean);
   }
 
   async _install() {
-    await this.__make(this.config.install);
+    await this.__make(this.settings.install);
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -813,8 +813,8 @@ class Make extends Bootstrap {
 }
 
 class Autotools extends Bootstrap {
-  constructor(workingConfig) {
-    super(workingConfig);
+  constructor(workingSettings) {
+    super(workingSettings);
 
     this.configCommand = 'emconfigure';
     this.configSubCommand = 'configure';
@@ -822,72 +822,72 @@ class Autotools extends Bootstrap {
     this.makeCommand = 'emmake';
     this.makeSubCommand = makeCommand;
 
-    this.__validateConfig();
+    this.__validateSettings();
   }
 
 ////////////////////////////////////////////////////////////////////////
 // Config validation
 ////////////////////////////////////////////////////////////////////////
 
-  __validateConfig() {
-    this.__validateConfigureConfig();
-    this.__validateBuildConfig();
-    this.__validateCleanConfig();
-    this.__validateInstallConfig();
-    this._validateEmsdkConfig();
+  __validateSettings() {
+    this.__validateConfigureSettings();
+    this.__validateBuildSettings();
+    this.__validateCleanSettings();
+    this.__validateInstallSettings();
+    this._validateEmsdkSettings();
   }
 
-  __validateConfigureConfig() {
-    if (!('configure' in this.config)
-        || !('path' in this.config.configure))
-      throw new RangeError('Configure config must have configure.path set to your source directory (which contains ./configure).');
+  __validateConfigureSettings() {
+    if (!('configure' in this.settings)
+        || !('path' in this.settings.configure))
+      throw new RangeError('Configure settings must have configure.path set to your source directory (which contains ./configure).');
     else
-      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config.configPath);
+      this.settings.configure.path = TryResolvePath(this.settings.configure.path, this.settings.configPath);
+
+    if (!this.settings.configure.arguments)
+      this.settings.configure.arguments = [];
+    else if (!Array.isArray(this.settings.configure.arguments))
+      this.settings.configure.arguments = [this.settings.configure.arguments];
+  }
+
+  __validateMakeSettings(stepKey, targetName = null, defaultPath = null) {
+    if (!(stepKey in this.settings))
+      this.settings[stepKey] = {};
+
+    if (defaultPath && !this.settings[stepKey].path)
+      this.settings[stepKey].path = defaultPath;
     
-    if (!this.config.configure.arguments)
-      this.config.configure.arguments = [];
-    else if (!Array.isArray(this.config.configure.arguments))
-      this.config.configure.arguments = [this.config.configure.arguments];
+    if (this.settings[stepKey].path)
+      this.settings[stepKey].path = TryResolvePath(this.settings[stepKey].path, this.settings.configPath);
+
+    if (!this.settings[stepKey].target)
+      this.settings[stepKey].target = targetName;
+
+    if (!this.settings[stepKey].arguments)
+      this.settings[stepKey].arguments = [];
+    else if (!Array.isArray(this.settings[stepKey].arguments))
+      this.settings[stepKey].arguments = [this.settings[stepKey].arguments];
   }
 
-  __validateMakeConfig(configKey, targetName = null, defaultPath = null) {
-    if (!(configKey in this.config))
-      this.config[configKey] = {};
-
-    if (defaultPath && !this.config[configKey].path)
-      this.config[configKey].path = defaultPath;
-    
-    if (this.config[configKey].path)
-      this.config[configKey].path = TryResolvePath(this.config[configKey].path, this.config.configPath);
-
-    if (!this.config[configKey].target)
-      this.config[configKey].target = targetName;
-
-    if (!this.config[configKey].arguments)
-      this.config[configKey].arguments = [];
-    else if (!Array.isArray(this.config[configKey].arguments))
-      this.config[configKey].arguments = [this.config[configKey].arguments];
+  __validateBuildSettings() {
+    this.__validateMakeSettings('build', null, './build');
   }
 
-  __validateBuildConfig() {
-    this.__validateMakeConfig('build', null, './build');
+  __validateCleanSettings() {
+    this.__validateMakeSettings('clean', 'clean');
   }
 
-  __validateCleanConfig() {
-    this.__validateMakeConfig('clean', 'clean');
-  }
+  __validateInstallSettings() {
+    this.__validateMakeSettings('install', 'install', './dist');
 
-  __validateInstallConfig() {
-    this.__validateMakeConfig('install', 'install', './dist');
+    if (this.settings.install.binaryPath)
+      this.settings.install.binaryPath = TryResolvePath(this.settings.install.binaryPath, this.settings.configPath);
 
-    if (this.config.install.binaryPath)
-      this.config.install.binaryPath = TryResolvePath(this.config.install.binaryPath, this.config.configPath);
+    if (this.settings.install.libraryPath)
+      this.settings.install.libraryPath = TryResolvePath(this.settings.install.libraryPath, this.settings.configPath);
 
-    if (this.config.install.libraryPath)
-      this.config.install.libraryPath = TryResolvePath(this.config.install.libraryPath, this.config.configPath);
-
-    if (this.config.install.includePath)
-      this.config.install.includePath = TryResolvePath(this.config.install.includePath, this.config.configPath);
+    if (this.settings.install.includePath)
+      this.settings.install.includePath = TryResolvePath(this.settings.install.includePath, this.settings.configPath);
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -895,25 +895,25 @@ class Autotools extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   async __ensureConfigure() {
-    if(!fs__default['default'].existsSync(path__default['default'].join(this.config.build.path, "Makefile")))
+    if(!fs__default['default'].existsSync(path__default['default'].join(this.settings.build.path, "Makefile")))
       await this._bindConfigCommand(this._configure);
   }
 
   __buildConfigureArguments() {
     let args = [
-      `--prefix="${this.config.install.path}"`,
+      `--prefix="${this.settings.install.path}"`,
     ];
 
-    if (this.config.install.binaryPath)
-      args.push(`--bindir="${this.config.install.binaryPath}"`);
+    if (this.settings.install.binaryPath)
+      args.push(`--bindir="${this.settings.install.binaryPath}"`);
 
-    if (this.config.install.libraryPath)
-      args.push(`--libdir="${this.config.install.libraryPath}"`);
+    if (this.settings.install.libraryPath)
+      args.push(`--libdir="${this.settings.install.libraryPath}"`);
 
-    if (this.config.install.includePath)
-      args.push(`--includedir="${this.config.install.includePath}"`);
+    if (this.settings.install.includePath)
+      args.push(`--includedir="${this.settings.install.includePath}"`);
 
-    args.push(...this.config.configure.arguments);
+    args.push(...this.settings.configure.arguments);
 
     return args;
   }
@@ -924,41 +924,41 @@ class Autotools extends Bootstrap {
 
   async _configure() {
     let args = this.__buildConfigureArguments();
-    let configSubCommand = path__default['default'].join(this.config.configure.path, this.configSubCommand);
+    let configSubCommand = path__default['default'].join(this.settings.configure.path, this.configSubCommand);
 
     await emsdk__default['default'].run(this.configCommand,
       [`"${configSubCommand}"`, ...args],
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.settings.build.path, shell: (process.platform === 'win32')}
     );
   }
 
-  async __make(subconfig) {
+  async __make(stepSettings) {
     // Make sure everything's configured before building.
     await this.__ensureConfigure();
 
     // build args
     let args;
-    if (subconfig.target)
-      args = [this.makeSubCommand, subconfig.target, ...subconfig.arguments];
+    if (stepSettings.target)
+      args = [this.makeSubCommand, stepSettings.target, ...stepSettings.arguments];
     else
-      args = [this.makeSubCommand, ...subconfig.arguments];
+      args = [this.makeSubCommand, ...stepSettings.arguments];
 
     // Make is invoked on the "build" path specifically.
     await emsdk__default['default'].run(this.makeCommand, args,
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.settings.build.path, shell: (process.platform === 'win32')}
     );
   }
 
   async _build() {
-    await this.__make(this.config.build);
+    await this.__make(this.settings.build);
   }
 
   async _clean() {
-    await this.__make(this.config.clean);
+    await this.__make(this.settings.clean);
   }
 
   async _install() {
-    await this.__make(this.config.install);
+    await this.__make(this.settings.install);
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -966,7 +966,7 @@ class Autotools extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   __ensureBuildDirExists() {
-    let result = shelljs__default['default'].mkdir('-p', this.config.build.path);
+    let result = shelljs__default['default'].mkdir('-p', this.settings.build.path);
     if (result.code !== 0)
       throw new Error(result.stderr);
   }
@@ -1056,8 +1056,8 @@ async function _retrieveMasterConfigFile(filePath, configLocator) {
 
 async function _getMasterConfig(configLocator) {
   // configLocator can be one of:
-  // 1. The name of a config listed in `emscripten.config.js`
-  // 2. A path to a folder that contains `emscripten.config.js`, `CMakeLists.txt`, `./configure`, or `Makefile`
+  // 1. The name of a config listed in `emscripten.settings.js`
+  // 2. A path to a folder that contains `emscripten.settings.js`, `CMakeLists.txt`, `./configure`, or `Makefile`
   // 3. A path directly to one of the above files
   // 4. A config object
 
@@ -1087,14 +1087,14 @@ async function _getMasterConfig(configLocator) {
     if (IsFile(locatorTestPath))
       fileSearchSet = [locatorTestPath];
     else
-      fileSearchSet = ['emscripten.config.js', 'CMakeLists.txt',
+      fileSearchSet = ['emscripten.settings.js', 'CMakeLists.txt',
         'configure', 'Makefile', 'makefile']
         .map(val => path__default['default'].join(dirPath, val));
     
     // Search for build/config files
     for (let filePath of fileSearchSet) {
       if (fs__default['default'].existsSync(filePath)) {
-        if (filePath.includes('emscripten.config.js'))
+        if (filePath.includes('emscripten.settings.js'))
           return await _retrieveMasterConfigFile(filePath, configLocator);
         else
           return _constructMasterConfig(filePath);
@@ -1107,8 +1107,8 @@ async function _getMasterConfig(configLocator) {
 
 /**
  * Get config to pass to Bootstrap object.
- * @param {string} [configLocator] - A name to a config listed in `emscripten.config.js`, or a path to a folder containing CMake/Autotools/Makefile configs, or a configuration object.
- * @param {object} [configFragment] - An object fragment to merge to the selected config. Not valid if `configLocator` is an object.
+ * @param {string} [configLocator] - A name to a config listed in `emscripten.settings.js`, or a path to a folder containing CMake/Autotools/Makefile configs, or a configuration object.
+ * @param {object} [settingsFragment] - An object fragment to merge to the selected config. Not valid if `configLocator` is an object.
  */
 async function GetWorkingConfig(a, b) {
   // Master config format:
@@ -1125,11 +1125,11 @@ async function GetWorkingConfig(a, b) {
   // }
   //
   // Our goal is to get the correct base config (e.g., above "named_config")
-  // and merge any changes from configFragment.
+  // and merge any changes from settingsFragment.
 
   // Parse arguments
   let configLocator = null;
-  let configFragment = {};
+  let settingsFragment = {};
   let args = Array.from(arguments).filter(el => (typeof el !== 'undefined' && el !== null));
 
   switch (args.length) {
@@ -1143,27 +1143,27 @@ async function GetWorkingConfig(a, b) {
         configLocator = args[0] || (configLocator || process.cwd());
       else
         // Don't default configLocator to process.cwd(); the intent
-        // is to use configFragment as the sole config.
-        configFragment = args[0] || configFragment;
+        // is to use settingsFragment as the sole config.
+        settingsFragment = args[0] || settingsFragment;
       break;
   
     case 2:
     default:
       if (typeof args[0] === 'string') {
         // Don't default to process.cwd(); the intent is to explicitly
-        // set configLocator. If null, then configFragment shall be
+        // set configLocator. If null, then settingsFragment shall be
         // the sole config.
         configLocator = args[0] || configLocator;
-        configFragment = args[1] || configFragment;
+        settingsFragment = args[1] || settingsFragment;
       } else
         // second arg is invalid, warn user
-        throw new RangeError('Second argument (`configFragment`) is invalid if the first argument is also an object.');
+        throw new RangeError('Second argument (`settingsFragment`) is invalid if the first argument is also an object.');
       break;
   }
 
   // Get configs to process. Returns immediately if configLocator === null
   let masterConfig = await _getMasterConfig(configLocator);
-  let workingConfig = {};
+  let workingSettings = {};
 
   // If EMSDK variables are top-level, make note of those then remove
   let emsdkPath = null;
@@ -1193,7 +1193,7 @@ async function GetWorkingConfig(a, b) {
   if ('default' in masterConfig) {
     if (typeof masterConfig.default === 'string') {
       if (masterConfig.default in masterConfig)
-        workingConfig = masterConfig[masterConfig.default];
+        workingSettings = masterConfig[masterConfig.default];
       else
         throw new RangeError(`Requested base config "${masterConfig.default}" was not found in master config.`);
     }
@@ -1203,18 +1203,18 @@ async function GetWorkingConfig(a, b) {
   // Else, determine finalConfig from keys
   let keys = Object.keys(masterConfig);
 
-  if (!keys.length && (typeof configFragment === 'object')) {
+  if (!keys.length && (typeof settingsFragment === 'object')) {
     // If the master config is empty, but the user specified a config fragment,
     // then the fragment becomes our working config.
-    workingConfig = configFragment;
+    workingSettings = settingsFragment;
   }
 
-  if (!workingConfig || !Object.keys(workingConfig).length)
+  if (!workingSettings || !Object.keys(workingSettings).length)
     throw new RangeError('Cannot determine base config to use. Specify "configLocator" parameter or set "default" name in the master config.');
 
-  // Merge configFragment into workingConfig
-  if (!workingConfig === configFragment)
-    mergeWith__default['default'](workingConfig, configFragment, function(objValue, srcValue) {
+  // Merge settingsFragment into workingSettings
+  if (!workingSettings === settingsFragment)
+    mergeWith__default['default'](workingSettings, settingsFragment, function(objValue, srcValue) {
       // Overwrite arrays, don't merge them
       if (Array.isArray(objValue))
         return srcValue;
@@ -1223,37 +1223,37 @@ async function GetWorkingConfig(a, b) {
 
   // A config object must have a build type.
   // This also catches empty configs.
-  if (!('type' in workingConfig))
+  if (!('type' in workingSettings))
     throw new RangeError(`Working config does not have a valid build type. Specify "type": <"make"|"autotools"|"cmake"> in the base config.`);
 
   // Move EMSDK variables to working config, unless the working config already has them
-  if (emsdkPath && !('emsdk' in workingConfig))
-    workingConfig.emsdk = emsdkPath;
+  if (emsdkPath && !('emsdk' in workingSettings))
+    workingSettings.emsdk = emsdkPath;
 
-  if (emsdkVersion && !('emsdkVersion' in workingConfig))
-    workingConfig.emsdkVersion = emsdkVersion;
+  if (emsdkVersion && !('emsdkVersion' in workingSettings))
+    workingSettings.emsdkVersion = emsdkVersion;
 
-  if (configPath && !('_configPath' in workingConfig))
-    workingConfig.configPath = configPath;
+  if (configPath && !('_configPath' in workingSettings))
+    workingSettings.configPath = configPath;
 
-  return workingConfig;
+  return workingSettings;
 }
 
 async function _getBootstrap(a, b) {
-  let workingConfig = await GetWorkingConfig(a, b);
+  let workingSettings = await GetWorkingConfig(a, b);
 
   let bootstrap;
-  switch (workingConfig.type.toLowerCase()) {
+  switch (workingSettings.type.toLowerCase()) {
     case 'make':
-      bootstrap = new Make(workingConfig);
+      bootstrap = new Make(workingSettings);
       break;
     
     case 'autotools':
-      bootstrap = new Autotools(workingConfig);
+      bootstrap = new Autotools(workingSettings);
       break;
     
     case 'cmake':
-      bootstrap = new CMake(workingConfig);
+      bootstrap = new CMake(workingSettings);
       break;
   }
 
@@ -1268,8 +1268,8 @@ async function _callAction(actionName, a, b) {
 
 /**
  * Configure the C/C++ project. Invokes CMake, `./configure`, etc.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 async function configure(a, b) {
   return _callAction('configure', a, b);
@@ -1277,8 +1277,8 @@ async function configure(a, b) {
 
 /**
  * Build the C/C++ project. Also configure the project if necessary. Invokes Make.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 async function build(a, b) {
   return _callAction('build', a, b);
@@ -1286,8 +1286,8 @@ async function build(a, b) {
 
 /**
  * Clean the C/C++ project. Invokes the "clean" target on Make.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 async function clean(a, b) {
   return _callAction('clean', a, b);
@@ -1295,8 +1295,8 @@ async function clean(a, b) {
 
 /**
  * Install the C/C++ project. Invokes the "install" target on Make.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 async function install(a, b) {
   return _callAction('install', a, b);
@@ -1304,8 +1304,8 @@ async function install(a, b) {
 
 /**
  * Clean then configure the C/C++ project.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 async function reconfigure(a, b) {
   return _callAction('reconfigure', a, b);
@@ -1313,8 +1313,8 @@ async function reconfigure(a, b) {
 
 /**
  * Clean, configure, then build the C/C++ project.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 async function rebuild(a, b) {
   return _callAction('rebuild', a, b);
@@ -1322,8 +1322,8 @@ async function rebuild(a, b) {
 
 /**
  * Build the C/C++ project. If the build fails, then clean, configure, and rebuild.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 async function compile(a, b) {
   return _callAction('compile', a, b);
@@ -1331,8 +1331,8 @@ async function compile(a, b) {
 
 /**
  * Install the given EMSDK version as specified in the config.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 async function installSDK(a, b) {
   const bootstrap = _getBootstrap(a, b);
@@ -1444,7 +1444,7 @@ emscripten <command> [arg...]
 
 A [config_locator] is the path to a configuration or build file; or the
 path to a directory containing the same; or the name of a config object
-listed in "<cwd>/emscripten.config.js." Default: "<cwd>"
+listed in "<cwd>/emscripten.settings.js." Default: "<cwd>"
 `.trimLeft());
 
   // Call the standard commands
@@ -1452,8 +1452,8 @@ listed in "<cwd>/emscripten.config.js." Default: "<cwd>"
     'reconfigure','rebuild','compile', 'install', 'installSDK'];
   
   if (verbs.indexOf(cmd) >= 0) {
-    let configKey = (args.length) ? args.shift() : null;
-    return emscripten[cmd](configKey);
+    let configLocator = (args.length) ? args.shift() : null;
+    return emscripten[cmd](configLocator);
   }
 
   // Else, run an arbitrary command

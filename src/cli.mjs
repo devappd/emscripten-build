@@ -75,7 +75,7 @@ emscripten <command> [arg...]
 
 A [config_locator] is the path to a configuration or build file; or the
 path to a directory containing the same; or the name of a config object
-listed in "<cwd>/emscripten.config.js." Default: "<cwd>"
+listed in "<cwd>/emscripten.settings.js." Default: "<cwd>"
 `.trimLeft());
 
   // Call the standard commands
@@ -83,8 +83,8 @@ listed in "<cwd>/emscripten.config.js." Default: "<cwd>"
     'reconfigure','rebuild','compile', 'install', 'installSDK'];
   
   if (verbs.indexOf(cmd) >= 0) {
-    let configKey = (args.length) ? args.shift() : null;
-    return emscripten[cmd](configKey);
+    let configLocator = (args.length) ? args.shift() : null;
+    return emscripten[cmd](configLocator);
   }
 
   // Else, run an arbitrary command

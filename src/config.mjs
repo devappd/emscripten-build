@@ -62,8 +62,8 @@ async function _retrieveMasterConfigFile(filePath, configLocator) {
 
 async function _getMasterConfig(configLocator) {
   // configLocator can be one of:
-  // 1. The name of a config listed in `emscripten.config.js`
-  // 2. A path to a folder that contains `emscripten.config.js`, `CMakeLists.txt`, `./configure`, or `Makefile`
+  // 1. The name of a config listed in `emscripten.settings.js`
+  // 2. A path to a folder that contains `emscripten.settings.js`, `CMakeLists.txt`, `./configure`, or `Makefile`
   // 3. A path directly to one of the above files
   // 4. A config object
 
@@ -93,14 +93,14 @@ async function _getMasterConfig(configLocator) {
     if (IsFile(locatorTestPath))
       fileSearchSet = [locatorTestPath];
     else
-      fileSearchSet = ['emscripten.config.js', 'CMakeLists.txt',
+      fileSearchSet = ['emscripten.settings.js', 'CMakeLists.txt',
         'configure', 'Makefile', 'makefile']
         .map(val => path.join(dirPath, val));
     
     // Search for build/config files
     for (let filePath of fileSearchSet) {
       if (fs.existsSync(filePath)) {
-        if (filePath.includes('emscripten.config.js'))
+        if (filePath.includes('emscripten.settings.js'))
           return await _retrieveMasterConfigFile(filePath, configLocator);
         else
           return _constructMasterConfig(filePath);
@@ -113,8 +113,8 @@ async function _getMasterConfig(configLocator) {
 
 /**
  * Get config to pass to Bootstrap object.
- * @param {string} [configLocator] - A name to a config listed in `emscripten.config.js`, or a path to a folder containing CMake/Autotools/Makefile configs, or a configuration object.
- * @param {object} [configFragment] - An object fragment to merge to the selected config. Not valid if `configLocator` is an object.
+ * @param {string} [configLocator] - A name to a config listed in `emscripten.settings.js`, or a path to a folder containing CMake/Autotools/Makefile configs, or a configuration object.
+ * @param {object} [settingsFragment] - An object fragment to merge to the selected config. Not valid if `configLocator` is an object.
  */
 export async function GetWorkingConfig(a, b) {
   // Master config format:
@@ -131,11 +131,11 @@ export async function GetWorkingConfig(a, b) {
   // }
   //
   // Our goal is to get the correct base config (e.g., above "named_config")
-  // and merge any changes from configFragment.
+  // and merge any changes from settingsFragment.
 
   // Parse arguments
   let configLocator = null;
-  let configFragment = {};
+  let settingsFragment = {};
   let args = Array.from(arguments).filter(el => (typeof el !== 'undefined' && el !== null));
 
   switch (args.length) {
@@ -149,27 +149,27 @@ export async function GetWorkingConfig(a, b) {
         configLocator = args[0] || (configLocator || process.cwd());
       else
         // Don't default configLocator to process.cwd(); the intent
-        // is to use configFragment as the sole config.
-        configFragment = args[0] || configFragment;
+        // is to use settingsFragment as the sole config.
+        settingsFragment = args[0] || settingsFragment;
       break;
   
     case 2:
     default:
       if (typeof args[0] === 'string') {
         // Don't default to process.cwd(); the intent is to explicitly
-        // set configLocator. If null, then configFragment shall be
+        // set configLocator. If null, then settingsFragment shall be
         // the sole config.
         configLocator = args[0] || configLocator;
-        configFragment = args[1] || configFragment;
+        settingsFragment = args[1] || settingsFragment;
       } else
         // second arg is invalid, warn user
-        throw new RangeError('Second argument (`configFragment`) is invalid if the first argument is also an object.');
+        throw new RangeError('Second argument (`settingsFragment`) is invalid if the first argument is also an object.');
       break;
   }
 
   // Get configs to process. Returns immediately if configLocator === null
   let masterConfig = await _getMasterConfig(configLocator);
-  let workingConfig = {};
+  let workingSettings = {};
 
   // If EMSDK variables are top-level, make note of those then remove
   let emsdkPath = null;
@@ -199,7 +199,7 @@ export async function GetWorkingConfig(a, b) {
   if ('default' in masterConfig) {
     if (typeof masterConfig.default === 'string') {
       if (masterConfig.default in masterConfig)
-        workingConfig = masterConfig[masterConfig.default];
+        workingSettings = masterConfig[masterConfig.default];
       else
         throw new RangeError(`Requested base config "${masterConfig.default}" was not found in master config.`);
     }
@@ -209,18 +209,18 @@ export async function GetWorkingConfig(a, b) {
   // Else, determine finalConfig from keys
   let keys = Object.keys(masterConfig);
 
-  if (!keys.length && (typeof configFragment === 'object')) {
+  if (!keys.length && (typeof settingsFragment === 'object')) {
     // If the master config is empty, but the user specified a config fragment,
     // then the fragment becomes our working config.
-    workingConfig = configFragment;
+    workingSettings = settingsFragment;
   }
 
-  if (!workingConfig || !Object.keys(workingConfig).length)
+  if (!workingSettings || !Object.keys(workingSettings).length)
     throw new RangeError('Cannot determine base config to use. Specify "configLocator" parameter or set "default" name in the master config.');
 
-  // Merge configFragment into workingConfig
-  if (!workingConfig === configFragment)
-    mergeWith(workingConfig, configFragment, function(objValue, srcValue) {
+  // Merge settingsFragment into workingSettings
+  if (!workingSettings === settingsFragment)
+    mergeWith(workingSettings, settingsFragment, function(objValue, srcValue) {
       // Overwrite arrays, don't merge them
       if (Array.isArray(objValue))
         return srcValue;
@@ -229,18 +229,18 @@ export async function GetWorkingConfig(a, b) {
 
   // A config object must have a build type.
   // This also catches empty configs.
-  if (!('type' in workingConfig))
+  if (!('type' in workingSettings))
     throw new RangeError(`Working config does not have a valid build type. Specify "type": <"make"|"autotools"|"cmake"> in the base config.`);
 
   // Move EMSDK variables to working config, unless the working config already has them
-  if (emsdkPath && !('emsdk' in workingConfig))
-    workingConfig.emsdk = emsdkPath;
+  if (emsdkPath && !('emsdk' in workingSettings))
+    workingSettings.emsdk = emsdkPath;
 
-  if (emsdkVersion && !('emsdkVersion' in workingConfig))
-    workingConfig.emsdkVersion = emsdkVersion;
+  if (emsdkVersion && !('emsdkVersion' in workingSettings))
+    workingSettings.emsdkVersion = emsdkVersion;
 
-  if (configPath && !('_configPath' in workingConfig))
-    workingConfig.configPath = configPath;
+  if (configPath && !('_configPath' in workingSettings))
+    workingSettings.configPath = configPath;
 
-  return workingConfig;
+  return workingSettings;
 }

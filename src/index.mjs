@@ -6,20 +6,20 @@ import emsdk from 'emsdk-npm';
 import { GetWorkingConfig } from './config.mjs';
 
 async function _getBootstrap(a, b) {
-  let workingConfig = await GetWorkingConfig(a, b);
+  let workingSettings = await GetWorkingConfig(a, b);
 
   let bootstrap;
-  switch (workingConfig.type.toLowerCase()) {
+  switch (workingSettings.type.toLowerCase()) {
     case 'make':
-      bootstrap = new Make(workingConfig);
+      bootstrap = new Make(workingSettings);
       break;
     
     case 'autotools':
-      bootstrap = new Autotools(workingConfig);
+      bootstrap = new Autotools(workingSettings);
       break;
     
     case 'cmake':
-      bootstrap = new CMake(workingConfig);
+      bootstrap = new CMake(workingSettings);
       break;
   }
 
@@ -34,8 +34,8 @@ async function _callAction(actionName, a, b) {
 
 /**
  * Configure the C/C++ project. Invokes CMake, `./configure`, etc.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 export async function configure(a, b) {
   return _callAction('configure', a, b);
@@ -43,8 +43,8 @@ export async function configure(a, b) {
 
 /**
  * Build the C/C++ project. Also configure the project if necessary. Invokes Make.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 export async function build(a, b) {
   return _callAction('build', a, b);
@@ -52,8 +52,8 @@ export async function build(a, b) {
 
 /**
  * Clean the C/C++ project. Invokes the "clean" target on Make.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 export async function clean(a, b) {
   return _callAction('clean', a, b);
@@ -61,8 +61,8 @@ export async function clean(a, b) {
 
 /**
  * Install the C/C++ project. Invokes the "install" target on Make.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 export async function install(a, b) {
   return _callAction('install', a, b);
@@ -70,8 +70,8 @@ export async function install(a, b) {
 
 /**
  * Clean then configure the C/C++ project.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 export async function reconfigure(a, b) {
   return _callAction('reconfigure', a, b);
@@ -79,8 +79,8 @@ export async function reconfigure(a, b) {
 
 /**
  * Clean, configure, then build the C/C++ project.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 export async function rebuild(a, b) {
   return _callAction('rebuild', a, b);
@@ -88,8 +88,8 @@ export async function rebuild(a, b) {
 
 /**
  * Build the C/C++ project. If the build fails, then clean, configure, and rebuild.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 export async function compile(a, b) {
   return _callAction('compile', a, b);
@@ -97,8 +97,8 @@ export async function compile(a, b) {
 
 /**
  * Install the given EMSDK version as specified in the config.
- * @param {string} [configLocator] - Path to a config or build file, or a folder containing the same, or the name of a config in `<cwd>/emscripten.config.js`, or a config object. Default: `<cwd>`
- * @param {object} [configFragment] - A config object to overwrite properties in the selected config.
+ * @param {string} [configLocator] - Path to a settings or build file, or a folder containing the same, or the name of a settings object in `<cwd>/emscripten.settings.js`, or a settings object. Default: `<cwd>`
+ * @param {object} [settingsFragment] - A settings object to overwrite properties in the active settings object.
  */
 export async function installSDK(a, b) {
   const bootstrap = _getBootstrap(a, b);

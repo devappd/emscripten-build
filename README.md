@@ -28,9 +28,9 @@ emscripten.build()
 
 ## Configuration
 
-You may pass a directory or file path that contains a build configuration file:
+You may pass a directory or file path that contains one of these build configuration files:
 
-* `emscripten.build.js`
+* `emscripten.settings.js`
 * `CMakeLists.txt`
 * `./configure`
 * `Makefile`
@@ -57,13 +57,15 @@ npx emscripten build /path/to/CMakeLists.txt
 npx emscripten install /path/to/CMakeLists.txt
 ```
 
-One of the files you may pass is `emscripten.config.js`. With this configuration file, you may manually
-set build paths and compiler flags. A simple configuration file may look like this:
+One of the files you may pass is `emscripten.settings.js`. With this settings file, you may manually
+set build paths and compiler flags. A simple settings file may look like this:
 
 ```js
-// Relative paths are resolved from the directory of `emscripten.config.js`
+// Relative paths are resolved from the directory of `emscripten.settings.js`
 
 module.exports = {
+    // This "settings object" is keyed by the unique name "myProject". Multiple settings
+    // objects may be specified here.
     "myProject": {
         "type": "cmake",
 
@@ -87,28 +89,28 @@ module.exports = {
 }
 ```
 
-Or on the CLI:
+You may reference the settings file on the CLI:
 
 ```sh
 # No need to set CWD here because default output path is resolved from
-# emscripten.config.js
+# emscripten.settings.js
 
-npx emscripten build /path/to/emscripten.config.js
-npx emscripten install /path/to/emscripten.config.js
+npx emscripten build /path/to/emscripten.settings.js
+npx emscripten install /path/to/emscripten.settings.js
 ```
 
 You can also pass the same config to the JS API:
 
 ```js
 const emscripten = require('emscripten-build');
-const em_config = require('./emscripten.config.js');
+const em_config = require('./emscripten.settings.js');
 
 // "myProject" refers to the named key shown in the config above.
 emscripten.build(em_config['myProject'])
     .then(bootstrap => bootstrap.install());
 ```
 
-You may set different parameters for the `configure`, `build`, `install`, and `clean` steps. You may also list multiple named configs in the `emscripten.config.js` file. See later in this document for the configuration format.
+You may set different parameters for the `configure`, `build`, `install`, and `clean` steps. You may also list multiple settings objects in the `emscripten.settings.js` file. See later in this document for the settings format.
 
 ## Installation
 
@@ -154,14 +156,14 @@ If you have any issues with the environment, you may refer to [issue #1](https:/
 ## Command Line Usage
 
 In all commands, `config_locator` is optional and refers to either:
-* The name of a config listed in `emscripten.config.js`
-* Path to a folder containing either `emscripten.config.js`, `CMakeLists.txt`, `./configure`, or `Makefile`
+* The name of a settings object listed in `emscripten.settings.js`
+* Path to a folder containing either `emscripten.settings.js`, `CMakeLists.txt`, `./configure`, or `Makefile`
 * Path to one of these four files
 
-If `config_locator` is a folder, it will search for `emscripten.config.js`, `CMakeLists.txt`, `./configure`, or `Makefile` in that order.
+If `config_locator` is a folder, it will search for `emscripten.settings.js`, `CMakeLists.txt`, `./configure`, or `Makefile` in that order.
 
-If `config_locator` is not specified, it defaults to the `default` name specified in
-`emscripten.config.js`. Or, if there's only one config specified, then that sole config
+If `config_locator` is not specified, it defaults to the `default` settings object name specified in
+`emscripten.settings.js`. Or, if there's only one settings object listed in the file, then that sole object
 will be selected.
 
 | Command | Description
@@ -180,28 +182,28 @@ will be selected.
 
 This package also supplies JavaScript bindings for the above commands:
     
-* `emscripten.configure(configLocator, customConfig)`
+* `emscripten.configure(configLocator, settingsFragment)`
 
-* `emscripten.build(configLocator, customConfig)` or `emscripten.make(configLocator, customConfig)`
+* `emscripten.build(configLocator, settingsFragment)` or `emscripten.make(configLocator, settingsFragment)`
 
-* `emscripten.clean(configLocator, customConfig)`
+* `emscripten.clean(configLocator, settingsFragment)`
 
-* `emscripten.install(configLocator, customConfig)`
+* `emscripten.install(configLocator, settingsFragment)`
 
-* `emscripten.reconfigure(configLocator, customConfig)`
+* `emscripten.reconfigure(configLocator, settingsFragment)`
 
-* `emscripten.rebuild(configLocator, customConfig)`
+* `emscripten.rebuild(configLocator, settingsFragment)`
 
-* `emscripten.compile(configLocator, customConfig)`
+* `emscripten.compile(configLocator, settingsFragment)`
 
-* `emscripten.installSDK(configLocator, customConfig)`
+* `emscripten.installSDK(configLocator, settingsFragment)`
 
 For all methods, both parameters are optional.
 
 | Parameter    | Description |
 | ------------ | ------------|
-| `configLocator` | Either a path to a folder containing `emscripten.config.js`, `CMakeLists.txt`, `./configure`, or `Makefile`; or a path directly to these files; or a config name specified in `emscripten.config.js`; or an object that conforms to a top-level config (see "Configuration Files", later). If a path to a folder is given, a build file is searched for in the above order.
-| `customConfig` | An object fragment with properties to overwrite on your selected config. This performs a deep merge on your selected config using this fragment. This parameter is not valid if you specify `configLocator` as a config object.
+| `configLocator` | Either a path to a folder containing `emscripten.settings.js`, `CMakeLists.txt`, `./configure`, or `Makefile`; or a path directly to these files; or a settings object name specified in `emscripten.settings.js`; or an object that conforms to `emscripten.settings.js` (see "Configuration Files", later). If a path to a folder is given, a build file is searched for in the above order.
+| `settingsFragment` | An object with properties to overwrite on your selected settings object. This performs a deep merge on your selected settings object using this fragment. This parameter is not valid if you specify `configLocator` as an object.
 
 Calling these methods will perform the action and return a Promise that yields a Bootstrap object.
 On the Bootstrap object, you can chain multiple calls while reusing the same config.
@@ -215,9 +217,9 @@ emscripten.configure()
     .then(bootstrap => bootstrap.clean());
 ```
 
-However, you cannot select a new config in the chained bootstrap nor specify a fragment to edit it. If you wish to do so, you need to call a method on the `emscripten` module.
+However, you cannot select a new config in the chained bootstrap nor specify a fragment to edit it. If you wish to do so, you need to invoke a new bootstrap by calling a method on the `emscripten` module.
 
-You can specify an object fragment to override certain parameters in your config. Note in this example that we're not chaining calls on `bootstrap`, but we are calling `emscripten.build()` when we provide a config fragment.
+You can specify a settings fragment to override certain parameters in your config. Note in this example that we're not chaining calls on `bootstrap`, but we are calling `emscripten.build()` when we provide a settings fragment.
 
 ```js
 const emscripten = require('emscripten-build');
@@ -235,9 +237,6 @@ emscripten.configure()
     }))
     .then(bootstrap => bootstrap.install());
 ```
-
-You want to structure the object not towards a top-level config (see below), but to a config
-object with keys `type`, `configure`, `build`, etc.
 
 With `emscripten.run()`, you can run any command inside the EMSDK environment. It does not return a bootstrap.
 
@@ -264,25 +263,25 @@ emscripten.build()
     ));
 ```
 
-## Configuration Files
+## Settings Files
 
 The below describes the parameters you can set for your build steps: `configure`, `build`, `install`, and `clean`.
 
-Note that the only required parameters are `your_config["type"]` and `your_config["configure"]["path"]` (for Makefile, `your_config["build"]["path"]` is used instead.)
+Note that the only required parameters are `your_settings["type"]` and `your_settings["configure"]["path"]`. For Makefile, `your_settings["build"]["path"]` is used instead.
 The other parameters have defaults as specified below.
 
 ### Relative Paths
 
-If any relative paths are specified in a config file, they are resolved in relation to the config file's directory.
+If any relative paths are specified in `emscripten.settings.js`, they are resolved in relation to that file's directory.
 
-If you are working from a build file (e.g., `emscripten build /path/to/CMakeLists.txt`), the default paths are
+If you are working from a build configuration file (e.g., `emscripten build /path/to/CMakeLists.txt`), the default paths are
 relative to your current working directory.
 
 ## Top-Level
 
-The config file lists some top-level fields such as `emsdkVersion`, `default`, and your project's build configurations.
+The settings file lists some top-level fields such as `emsdkVersion`, `default`, and your project's settings objects.
 
-In this top-level object, you may list multiple configurations by name:
+In this top-level object, you may list multiple settings objects by name:
 
 ```js
 module.exports = {
@@ -291,14 +290,14 @@ module.exports = {
     // Default: "latest"
     "emsdkVersion": "latest",
 
-    // Selects the configuration to use if one is not specified
+    // Selects the settings object to use if one is not specified
     // on the command line.
     //
-    // Default: Sole config if only one is listed, otherwise
+    // Default: Sole settings object if only one is listed, otherwise
     // this is required.
-    "default": "named_config",
+    "default": "named_settings",
 
-    "named_config": {
+    "named_settings": {
         // Selects the build toolset to use. Required.
         // Possible values: "make"|"autotools"|"cmake"
         "type": "cmake",
@@ -309,7 +308,7 @@ module.exports = {
         "clean": { /* ... */ }
     },
 
-    "other_named_config": {
+    "other_named_settings": {
         "type": "make",
 
         "configure": { /* ... */ },

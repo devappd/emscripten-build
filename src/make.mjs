@@ -4,55 +4,55 @@ import { checkMakeInstalled, makeCommand } from './environment.mjs';
 import { TryResolvePath } from './utils.mjs';
 
 export default class Make extends Bootstrap {
-  constructor(workingConfig) {
-    super(workingConfig);
+  constructor(workingSettings) {
+    super(workingSettings);
 
     this.makeCommand = 'emmake';
     this.makeSubCommand = makeCommand;
 
-    this.__validateConfig();
+    this.__validateSettings();
   }
 
 ////////////////////////////////////////////////////////////////////////
 // Config validation
 ////////////////////////////////////////////////////////////////////////
 
-  __validateConfig() {
-    this.__validateBuildConfig();
-    this.__validateCleanConfig();
-    this.__validateInstallConfig();
-    this._validateEmsdkConfig();
+  __validateSettings() {
+    this.__validateBuildSettings();
+    this.__validateCleanSettings();
+    this.__validateInstallSettings();
+    this._validateEmsdkSettings();
   }
 
-  __validateMakeConfig(configKey, targetName = null) {
-    if (!(configKey in this.config))
-      this.config[configKey] = {};
+  __validateMakeSettings(stepKey, targetName = null) {
+    if (!(stepKey in this.settings))
+      this.settings[stepKey] = {};
 
-    if (!('target' in this.config[configKey]))
-      this.config[configKey].target = targetName;
+    if (!('target' in this.settings[stepKey]))
+      this.settings[stepKey].target = targetName;
 
-    if (!this.config[configKey].arguments)
-      this.config[configKey].arguments = [];
-    else if (!Array.isArray(this.config[configKey].arguments))
-      this.config[configKey].arguments = [this.config[configKey].arguments];
+    if (!this.settings[stepKey].arguments)
+      this.settings[stepKey].arguments = [];
+    else if (!Array.isArray(this.settings[stepKey].arguments))
+      this.settings[stepKey].arguments = [this.settings[stepKey].arguments];
   }
 
-  __validateBuildConfig() {
-    if (!('build' in this.config)
-        || !('path' in this.config.build))
-      throw new RangeError('Build config must have build.path set to your source directory (which contains Makefile).');
+  __validateBuildSettings() {
+    if (!('build' in this.settings)
+        || !('path' in this.settings.build))
+      throw new RangeError('Build settings must have build.path set to your source directory (which contains Makefile).');
     else
-      this.config.build.path = TryResolvePath(this.config.build.path, this.config.configPath);
+      this.settings.build.path = TryResolvePath(this.settings.build.path, this.settings.configPath);
     
-    this.__validateMakeConfig('build', null);
+    this.__validateMakeSettings('build', null);
   }
 
-  __validateCleanConfig() {
-    this.__validateMakeConfig('clean', 'clean');
+  __validateCleanSettings() {
+    this.__validateMakeSettings('clean', 'clean');
   }
 
-  __validateInstallConfig() {
-    this.__validateMakeConfig('install', 'install');
+  __validateInstallSettings() {
+    this.__validateMakeSettings('install', 'install');
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -63,30 +63,30 @@ export default class Make extends Bootstrap {
     // Nothing to do, make is not configurable
   }
 
-  async __make(subconfig) {
+  async __make(stepSettings) {
     // build args
     let args;
-    if (subconfig.target)
-      args = [this.makeSubCommand, subconfig.target, ...subconfig.arguments];
+    if (stepSettings.target)
+      args = [this.makeSubCommand, stepSettings.target, ...stepSettings.arguments];
     else
-      args = [this.makeSubCommand, ...subconfig.arguments];
+      args = [this.makeSubCommand, ...stepSettings.arguments];
 
     // Make is called on the "build" path specifically.
     await emsdk.run(this.makeCommand, args,
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.settings.build.path, shell: (process.platform === 'win32')}
     );
   }
 
   async _build() {
-    await this.__make(this.config.build);
+    await this.__make(this.settings.build);
   }
 
   async _clean() {
-    await this.__make(this.config.clean);
+    await this.__make(this.settings.clean);
   }
 
   async _install() {
-    await this.__make(this.config.install);
+    await this.__make(this.settings.install);
   }
 
 ////////////////////////////////////////////////////////////////////////

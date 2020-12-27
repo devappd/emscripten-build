@@ -7,8 +7,8 @@ import path from 'path';
 import fs from 'fs';
 
 export default class Autotools extends Bootstrap {
-  constructor(workingConfig) {
-    super(workingConfig);
+  constructor(workingSettings) {
+    super(workingSettings);
 
     this.configCommand = 'emconfigure';
     this.configSubCommand = 'configure';
@@ -16,72 +16,72 @@ export default class Autotools extends Bootstrap {
     this.makeCommand = 'emmake';
     this.makeSubCommand = makeCommand;
 
-    this.__validateConfig();
+    this.__validateSettings();
   }
 
 ////////////////////////////////////////////////////////////////////////
 // Config validation
 ////////////////////////////////////////////////////////////////////////
 
-  __validateConfig() {
-    this.__validateConfigureConfig();
-    this.__validateBuildConfig();
-    this.__validateCleanConfig();
-    this.__validateInstallConfig();
-    this._validateEmsdkConfig();
+  __validateSettings() {
+    this.__validateConfigureSettings();
+    this.__validateBuildSettings();
+    this.__validateCleanSettings();
+    this.__validateInstallSettings();
+    this._validateEmsdkSettings();
   }
 
-  __validateConfigureConfig() {
-    if (!('configure' in this.config)
-        || !('path' in this.config.configure))
-      throw new RangeError('Configure config must have configure.path set to your source directory (which contains ./configure).');
+  __validateConfigureSettings() {
+    if (!('configure' in this.settings)
+        || !('path' in this.settings.configure))
+      throw new RangeError('Configure settings must have configure.path set to your source directory (which contains ./configure).');
     else
-      this.config.configure.path = TryResolvePath(this.config.configure.path, this.config.configPath);
+      this.settings.configure.path = TryResolvePath(this.settings.configure.path, this.settings.configPath);
+
+    if (!this.settings.configure.arguments)
+      this.settings.configure.arguments = [];
+    else if (!Array.isArray(this.settings.configure.arguments))
+      this.settings.configure.arguments = [this.settings.configure.arguments];
+  }
+
+  __validateMakeSettings(stepKey, targetName = null, defaultPath = null) {
+    if (!(stepKey in this.settings))
+      this.settings[stepKey] = {};
+
+    if (defaultPath && !this.settings[stepKey].path)
+      this.settings[stepKey].path = defaultPath;
     
-    if (!this.config.configure.arguments)
-      this.config.configure.arguments = [];
-    else if (!Array.isArray(this.config.configure.arguments))
-      this.config.configure.arguments = [this.config.configure.arguments];
+    if (this.settings[stepKey].path)
+      this.settings[stepKey].path = TryResolvePath(this.settings[stepKey].path, this.settings.configPath);
+
+    if (!this.settings[stepKey].target)
+      this.settings[stepKey].target = targetName;
+
+    if (!this.settings[stepKey].arguments)
+      this.settings[stepKey].arguments = [];
+    else if (!Array.isArray(this.settings[stepKey].arguments))
+      this.settings[stepKey].arguments = [this.settings[stepKey].arguments];
   }
 
-  __validateMakeConfig(configKey, targetName = null, defaultPath = null) {
-    if (!(configKey in this.config))
-      this.config[configKey] = {};
-
-    if (defaultPath && !this.config[configKey].path)
-      this.config[configKey].path = defaultPath;
-    
-    if (this.config[configKey].path)
-      this.config[configKey].path = TryResolvePath(this.config[configKey].path, this.config.configPath);
-
-    if (!this.config[configKey].target)
-      this.config[configKey].target = targetName;
-
-    if (!this.config[configKey].arguments)
-      this.config[configKey].arguments = [];
-    else if (!Array.isArray(this.config[configKey].arguments))
-      this.config[configKey].arguments = [this.config[configKey].arguments];
+  __validateBuildSettings() {
+    this.__validateMakeSettings('build', null, './build');
   }
 
-  __validateBuildConfig() {
-    this.__validateMakeConfig('build', null, './build');
+  __validateCleanSettings() {
+    this.__validateMakeSettings('clean', 'clean');
   }
 
-  __validateCleanConfig() {
-    this.__validateMakeConfig('clean', 'clean');
-  }
+  __validateInstallSettings() {
+    this.__validateMakeSettings('install', 'install', './dist');
 
-  __validateInstallConfig() {
-    this.__validateMakeConfig('install', 'install', './dist');
+    if (this.settings.install.binaryPath)
+      this.settings.install.binaryPath = TryResolvePath(this.settings.install.binaryPath, this.settings.configPath);
 
-    if (this.config.install.binaryPath)
-      this.config.install.binaryPath = TryResolvePath(this.config.install.binaryPath, this.config.configPath);
+    if (this.settings.install.libraryPath)
+      this.settings.install.libraryPath = TryResolvePath(this.settings.install.libraryPath, this.settings.configPath);
 
-    if (this.config.install.libraryPath)
-      this.config.install.libraryPath = TryResolvePath(this.config.install.libraryPath, this.config.configPath);
-
-    if (this.config.install.includePath)
-      this.config.install.includePath = TryResolvePath(this.config.install.includePath, this.config.configPath);
+    if (this.settings.install.includePath)
+      this.settings.install.includePath = TryResolvePath(this.settings.install.includePath, this.settings.configPath);
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -89,25 +89,25 @@ export default class Autotools extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   async __ensureConfigure() {
-    if(!fs.existsSync(path.join(this.config.build.path, "Makefile")))
+    if(!fs.existsSync(path.join(this.settings.build.path, "Makefile")))
       await this._bindConfigCommand(this._configure);
   }
 
   __buildConfigureArguments() {
     let args = [
-      `--prefix="${this.config.install.path}"`,
+      `--prefix="${this.settings.install.path}"`,
     ];
 
-    if (this.config.install.binaryPath)
-      args.push(`--bindir="${this.config.install.binaryPath}"`);
+    if (this.settings.install.binaryPath)
+      args.push(`--bindir="${this.settings.install.binaryPath}"`);
 
-    if (this.config.install.libraryPath)
-      args.push(`--libdir="${this.config.install.libraryPath}"`);
+    if (this.settings.install.libraryPath)
+      args.push(`--libdir="${this.settings.install.libraryPath}"`);
 
-    if (this.config.install.includePath)
-      args.push(`--includedir="${this.config.install.includePath}"`);
+    if (this.settings.install.includePath)
+      args.push(`--includedir="${this.settings.install.includePath}"`);
 
-    args.push(...this.config.configure.arguments);
+    args.push(...this.settings.configure.arguments);
 
     return args;
   }
@@ -118,41 +118,41 @@ export default class Autotools extends Bootstrap {
 
   async _configure() {
     let args = this.__buildConfigureArguments();
-    let configSubCommand = path.join(this.config.configure.path, this.configSubCommand);
+    let configSubCommand = path.join(this.settings.configure.path, this.configSubCommand);
 
     await emsdk.run(this.configCommand,
       [`"${configSubCommand}"`, ...args],
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.settings.build.path, shell: (process.platform === 'win32')}
     );
   }
 
-  async __make(subconfig) {
+  async __make(stepSettings) {
     // Make sure everything's configured before building.
     await this.__ensureConfigure();
 
     // build args
     let args;
-    if (subconfig.target)
-      args = [this.makeSubCommand, subconfig.target, ...subconfig.arguments];
+    if (stepSettings.target)
+      args = [this.makeSubCommand, stepSettings.target, ...stepSettings.arguments];
     else
-      args = [this.makeSubCommand, ...subconfig.arguments];
+      args = [this.makeSubCommand, ...stepSettings.arguments];
 
     // Make is invoked on the "build" path specifically.
     await emsdk.run(this.makeCommand, args,
-      {cwd: this.config.build.path, shell: (process.platform === 'win32')}
+      {cwd: this.settings.build.path, shell: (process.platform === 'win32')}
     );
   }
 
   async _build() {
-    await this.__make(this.config.build);
+    await this.__make(this.settings.build);
   }
 
   async _clean() {
-    await this.__make(this.config.clean);
+    await this.__make(this.settings.clean);
   }
 
   async _install() {
-    await this.__make(this.config.install);
+    await this.__make(this.settings.install);
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -160,7 +160,7 @@ export default class Autotools extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   __ensureBuildDirExists() {
-    let result = shelljs.mkdir('-p', this.config.build.path);
+    let result = shelljs.mkdir('-p', this.settings.build.path);
     if (result.code !== 0)
       throw new Error(result.stderr);
   }

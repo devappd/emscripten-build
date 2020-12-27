@@ -2,8 +2,8 @@ import { ActivateEmSDK } from './activate.mjs';
 import emsdk from 'emsdk-npm';
 
 export default class Bootstrap {
-  constructor(workingConfig) {
-    this.config = workingConfig;
+  constructor(workingSettings) {
+    this.settings = workingSettings;
 
     this.configCommand = null;
     this.configSubCommand = null;
@@ -16,10 +16,10 @@ export default class Bootstrap {
 // Config validation
 ////////////////////////////////////////////////////////////////////////
 
-  _validateEmsdkConfig() {
-    if (!('emsdkVersion' in this.config)
-        || !this.config.emsdkVersion)
-      this.config.emsdkVersion = 'latest';
+  _validateEmsdkSettings() {
+    if (!('emsdkVersion' in this.settings)
+        || !this.settings.emsdkVersion)
+      this.settings.emsdkVersion = 'latest';
   }
 
 ////////////////////////////////////////////////////////////////////////
@@ -68,8 +68,8 @@ export default class Bootstrap {
 
   async __preCommand() {
     // emsdkVersion defaults to 'latest' and is guaranteed to be
-    // in this.config
-    await ActivateEmSDK(this.config.emsdkVersion);
+    // in this.settings
+    await ActivateEmSDK(this.settings.emsdkVersion);
   }
 
   async _bindCommand(impl, ...args) {
