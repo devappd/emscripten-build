@@ -1,6 +1,5 @@
+#!/usr/bin/env node
 'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
 
 var emsdk = require('emsdk-npm');
 var path = require('path');
@@ -1407,10 +1406,10 @@ async function _getBootstrap(a, b) {
   return bootstrap;
 }
 
-async function _callAction(actionName, a, b) {
+async function _callAction(actionName, a, b, ...args) {
   const bootstrap = await _getBootstrap(a, b);
 
-  return bootstrap[actionName]();
+  return bootstrap[actionName](...args);
 }
 
 /**
@@ -1505,12 +1504,145 @@ async function run(command, args = [], opts = {}) {
   return emsdk__default['default'].run(command, args, opts);
 }
 
-exports.build = build;
-exports.clean = clean;
-exports.compile = compile;
-exports.configure = configure;
-exports.install = install;
-exports.installSDK = installSDK;
-exports.rebuild = rebuild;
-exports.reconfigure = reconfigure;
-exports.run = run;
+var emscripten = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  configure: configure,
+  build: build,
+  clean: clean,
+  install: install,
+  reconfigure: reconfigure,
+  rebuild: rebuild,
+  compile: compile,
+  installSDK: installSDK,
+  run: run
+});
+
+async function main(argv) {
+  let args = argv.slice(2);
+
+  let firstCmd = true;
+  let cmd = args.shift();
+
+  if (typeof cmd === 'string')
+    cmd = cmd.toLowerCase();
+
+  // Check for unspecified commands.
+  if (!cmd
+    // Run cmd requires at least one parameter
+    || (!args.length && (cmd === 'run'))
+    || cmd === '--help' || cmd === '-h' || cmd === '-?' || cmd === 'help'
+  )
+    throw new RangeError(`
+emscripten-build
+
+Build Usage: 
+
+emscripten --configure [config_locator]
+
+    Configure the project.
+
+emscripten --build [config_locator]
+
+    Build the project and configure it first if necessary.
+
+emscripten --clean [config_locator]
+
+    Reset the project's build directories.
+
+emscripten --install [config_locator]
+
+    Install the project's build files per the Makefile target.
+
+emscripten --reconfigure [config_locator]
+
+    Clean the project then configure it.
+
+emscripten --rebuild [config_locator]
+
+    Clean the project, configure it, then build.
+
+emscripten --compile [config_locator]
+
+    Build the project. If the build fails, the project is cleaned then
+    a rebuild is attempted.
+
+emscripten --installSDK [config_locator]
+
+    Install the given EMSDK version into the given path, per the build
+    settings.
+
+A [config_locator] is the path to a settings or build configuration; or
+the path to a directory containing such a file; or the name of a
+settings object listed in "emscripten.settings.js". Default: "<cwd>"
+
+Each command can be chained left-to-right with the same configuration.
+For example, this builds and installs the given project:
+
+    emscripten --build --install [config_locator]
+
+------------------------------------------------------------------------
+
+Emscripten SDK Usage:
+
+emscripten run <command> [arg...]
+emscripten <command> [arg...]
+
+    Runs an arbitrary command within the context of the Emscripten SDK
+    environment. Forces the "latest" SDK version. This command cannot be
+    chained.
+`.trimLeft());
+
+  let configLocator = null;
+  let bootstrap;
+
+  do {
+    // Check for standard command.
+    let verbs = ['configure','build','clean',
+      'reconfigure','rebuild','compile', 'install', 'installsdk'];
+    
+    let verbCmd = cmd.toLowerCase().replace(/^-{2}/g, '');
+
+    // Verbs start with --, but OPTIONALLY the first verb can omit the --
+    // for consistency with node-gyp.
+    if ((cmd.startsWith('--') || firstCmd)
+        && verbs.indexOf(verbCmd) >= 0
+    ) {
+      // Get the configLocator at the end of the cmd string. This never
+      // starts with --.
+      if (firstCmd && args.length) {
+        let test = args[args.length-1];
+        if (!test.startsWith('--'))
+          configLocator = args.pop();
+      }
+
+      // installSDK is not a bootstrap verb itself, but it does return
+      // a bootstrap.
+      if (verbCmd === 'installsdk')
+        bootstrap = await installSDK(configLocator);
+      else if (firstCmd)
+        bootstrap = await emscripten[verbCmd](configLocator);
+      else
+        bootstrap = await bootstrap[verbCmd]();
+
+      // Chain next command
+      firstCmd = false;
+      continue;
+    } else if (firstCmd) {
+      // Run an arbitrary command
+      if (verbCmd === 'run')
+        cmd = args.shift();
+
+      return run(cmd, args,
+        { shell: (process.platform === 'win32') }
+      );
+    } else
+      throw new RangeError(`Invalid argument: ${cmd}`);
+  } while((cmd = args.shift()) && typeof cmd === 'string');
+}
+
+main(process.argv)
+.then(_ => process.exit(0))
+.catch(err => {
+  console.error(err.message);
+  process.exit(1);
+});

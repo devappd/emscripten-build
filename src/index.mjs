@@ -26,10 +26,10 @@ async function _getBootstrap(a, b) {
   return bootstrap;
 }
 
-async function _callAction(actionName, a, b) {
+async function _callAction(actionName, a, b, ...args) {
   const bootstrap = await _getBootstrap(a, b);
 
-  return bootstrap[actionName]();
+  return bootstrap[actionName](...args);
 }
 
 /**

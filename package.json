@@ -2,15 +2,15 @@
   "name": "emscripten-build",
   "version": "0.0.1",
   "description": "Configure and build a C/C++ emscripten project.",
-  "main": "./dist/bundle.js",
+  "main": "./dist/api.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build:cli": "npx rollup ./src/cli.mjs --format cjs --file ./dist/emscripten.js --plugin rollup-plugin-preserve-shebang",
-    "build:lib": "npx rollup ./src/index.mjs --format cjs --file ./dist/bundle.js",
+    "build:cli": "npx rollup ./src/cli.mjs --format cjs --file ./dist/cli.js --plugin rollup-plugin-preserve-shebang",
+    "build:lib": "npx rollup ./src/index.mjs --format cjs --file ./dist/api.js",
     "build": "npm run build:lib && npm run build:cli"
   },
   "bin": {
-    "emscripten": "./dist/emscripten.js"
+    "emscripten": "./dist/cli.js"
   },
   "repository": {
     "type": "git",

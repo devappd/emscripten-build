@@ -14,7 +14,7 @@ See example usage of this toolset in [emscripten-npm-examples](https://github.co
 Building is as simple as switching to your project directory and entering the command line:
 
 ```sh
-npx emscripten build
+npx emscripten --build
 ```
 
 or invoking from JavaScript:
@@ -53,8 +53,8 @@ Or on the CLI:
 # to your JS <project_dir>.
 
 cd <project_dir>
-npx emscripten build /path/to/CMakeLists.txt
-npx emscripten install /path/to/CMakeLists.txt
+npx emscripten --build /path/to/CMakeLists.txt
+npx emscripten --install /path/to/CMakeLists.txt
 ```
 
 One of the files you may pass is `emscripten.settings.js`. With this settings file, you may manually
@@ -95,8 +95,8 @@ You may reference the settings file on the CLI:
 # No need to set CWD here because default output path is resolved from
 # emscripten.settings.js
 
-npx emscripten build /path/to/emscripten.settings.js
-npx emscripten install /path/to/emscripten.settings.js
+npx emscripten --build /path/to/emscripten.settings.js
+npx emscripten --install /path/to/emscripten.settings.js
 ```
 
 You can also pass the same config to the JS API:
@@ -155,6 +155,26 @@ If you have any issues with the environment, you may refer to [issue #1](https:/
 
 ## Command Line Usage
 
+| Command | Description
+| ------- | -----------
+| `emscripten --configure [config_locator]` | Configure the project.
+| `emscripten --build [config_locator]` | Build the project and configure it first if there is no build cache.
+| `emscripten --clean [config_locator]` | Reset the project's build files.
+| `emscripten --install [config_locator]` | Copy the project's build output into a target directory.
+| `emscripten --reconfigure [config_locator]` | Clean the project then configure it.
+| `emscripten --rebuild [config_locator]` | Clean the project, configure it, then build.
+| `emscripten --compile [config_locator]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
+| `emscripten --installSDK [config_locator]` | Installs the requested EMSDK version from the given config.
+
+Each command can be chained left-to-right with the same build configuration.
+For example, this will build and install the given config:
+
+```sh
+npx emscripten --build --install [config_locator]
+```
+
+For consistency with [node-gyp](https://github.com/nodejs/node-gyp), the first command may omit the `--` prefix.
+
 In all commands, `config_locator` is optional and refers to either:
 * The name of a settings object listed in `emscripten.settings.js`
 * Path to a folder containing either `emscripten.settings.js`, `CMakeLists.txt`, `./configure`, or `Makefile`
@@ -166,17 +186,24 @@ If `config_locator` is not specified, it defaults to the `default` settings obje
 `emscripten.settings.js`. Or, if there's only one settings object listed in the file, then that sole object
 will be selected.
 
-| Command | Description
-| ------- | -----------
-| `emscripten configure [config_locator]` | Configure the project.
-| `emscripten build [config_locator]` | Build the project and configure it first if necessary.
-| `emscripten clean [config_locator]` | Reset the project's build files.
-| `emscripten install [config_locator]` | Copy the project's build output into a target directory.
-| `emscripten reconfigure [config_locator]` | Clean the project then configure it.
-| `emscripten rebuild [config_locator]` | Clean the project, configure it, then build.
-| `emscripten compile [config_locator]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
-| `emscripten installSDK [config_locator]` | Installs the requested EMSDK version from the given config.
-| `emscripten run <command> [arg...]` | Runs a given command under the context of the EMSDK environment.
+### Emscripten SDK Usage
+
+You may also run an arbitrary command under the Emscripten SDK. This forces
+usage of the `latest` SDK version. This operation cannot be chained:
+
+```sh
+npx emscripten <command> [args...]
+```
+
+If you need to use a specific SDK version, use the [emsdk-npm](https://github.com/devappd/emsdk-npm)
+commands instead:
+
+```sh
+npx emsdk-checkout
+npx emsdk install [version]
+npx emsdk activate [version]
+npx emsdk-run <command> [args...]
+```
 
 ## JavaScript Usage
 
@@ -238,7 +265,10 @@ emscripten.configure()
     .then(bootstrap => bootstrap.install());
 ```
 
-With `emscripten.run()`, you can run any command inside the EMSDK environment. It does not return a bootstrap.
+### Emscripten SDK Usage
+
+With `emscripten.run()`, you can run any command under the Emscripten SDK. This forces usage of
+the `latest` SDK version. It does not return a bootstrap.
 
 ```js
 const emscripten = require('emscripten-build');
@@ -251,7 +281,7 @@ emscripten.run('command',
 ```
 
 You can also invoke `run()` on an existing bootstrap. In this case, it can be chained
-with other bootstrap calls.
+with other bootstrap calls, and it uses the SDK version specified in your build settings:
 
 ```js
 const emscripten = require('emscripten-build');
