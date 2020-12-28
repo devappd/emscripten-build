@@ -25,8 +25,8 @@ if ($env:APPVEYOR -eq $true) {
 }
 
 # Assumes package.json value https://github.com/devappd/emscripten-build-npm/archive/main.tar.gz
-$EMSCRIPTEN_BUILD_SEARCH = "main.tar.gz"
-$EMSCRIPTEN_BUILD_REPLACE = "$commit.tar.gz"
+$EMSCRIPTEN_BUILD_SEARCH = "#main"
+$EMSCRIPTEN_BUILD_REPLACE = "#$commit"
 
 # Explicitly set EMSDK install location to bypass Windows MAX_PATH
 # Test for space in path, per https://github.com/devappd/emscripten-build-npm/issues/9

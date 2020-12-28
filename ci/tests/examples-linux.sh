@@ -16,8 +16,8 @@ else
 fi
 
 # Assumes package.json value https://github.com/devappd/emscripten-build-npm/archive/main.tar.gz
-EMSCRIPTEN_BUILD_SEARCH="main.tar.gz"
-EMSCRIPTEN_BUILD_REPLACE="$commit.tar.gz"
+EMSCRIPTEN_BUILD_SEARCH="#main"
+EMSCRIPTEN_BUILD_REPLACE="#$commit"
 
 echo -e "
 ########################################################################
