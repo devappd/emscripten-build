@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import * as emscripten from './index.mjs';
+import { disableEmSDKUpdates } from './index.mjs';
 
 async function main(argv) {
   let args = argv.slice(2);
@@ -22,48 +23,52 @@ emscripten-build
 
 Build Usage: 
 
-emscripten --configure [config_locator]
+emscripten --configure [--no-update] [config_locator]
 
     Configure the project.
 
-emscripten --build [config_locator]
+emscripten --build [--no-update] [config_locator]
 
     Build the project and configure it first if necessary.
 
-emscripten --clean [config_locator]
+emscripten --clean [--no-update] [config_locator]
 
     Reset the project's build directories.
 
-emscripten --install [config_locator]
+emscripten --install [--no-update] [config_locator]
 
     Install the project's build files per the Makefile target.
 
-emscripten --reconfigure [config_locator]
+emscripten --reconfigure [--no-update] [config_locator]
 
     Clean the project then configure it.
 
-emscripten --rebuild [config_locator]
+emscripten --rebuild [--no-update] [config_locator]
 
     Clean the project, configure it, then build.
 
-emscripten --compile [config_locator]
+emscripten --compile [--no-update] [config_locator]
 
     Build the project. If the build fails, the project is cleaned then
     a rebuild is attempted.
 
-emscripten --installSDK [config_locator]
+emscripten --installSDK [--no-update] [config_locator]
 
     Install the given EMSDK version into the given path, per the build
     settings.
+
+Specify --no-update to skip updating the Emscripten SDK. By default,
+this command will check for updates on every call.
 
 A [config_locator] is the path to a settings or build configuration; or
 the path to a directory containing such a file; or the name of a
 settings object listed in "emscripten.settings.js". Default: "<cwd>"
 
 Each command can be chained left-to-right with the same configuration.
-For example, this builds and installs the given project:
+For example, this builds and installs the given project without
+updating the SDK:
 
-    emscripten --build --install [config_locator]
+    emscripten --build --install --no-update [config_locator]
 
 ------------------------------------------------------------------------
 
@@ -92,12 +97,21 @@ emscripten <command> [arg...]
     if ((cmd.startsWith('--') || firstCmd)
         && verbs.indexOf(verbCmd) >= 0
     ) {
-      // Get the configLocator at the end of the cmd string. This never
-      // starts with --.
-      if (firstCmd && args.length) {
-        let test = args[args.length-1];
-        if (!test.startsWith('--'))
-          configLocator = args.pop();
+      if (firstCmd) {
+        // Now that we know we're running build settings, handle --no-update
+        let noUpdate = args.findIndex(item => '--no-update' === item.toLowerCase());
+        if (noUpdate >= 0) {
+          args.splice(noUpdate);
+          emscripten.disableEmSDKUpdates();
+        }
+
+        // Get the configLocator at the end of the cmd string. This never
+        // starts with --
+        if (args.length) {
+          let test = args[args.length-1];
+          if (!test.startsWith('--'))
+            configLocator = args.pop();
+        }
       }
 
       // installSDK is not a bootstrap verb itself, but it does return

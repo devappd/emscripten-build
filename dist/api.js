@@ -48,31 +48,65 @@ var mergeWith__default = /*#__PURE__*/_interopDefaultLegacy(mergeWith);
 
 // activate.js
 
-let _installed = [];
+let alwaysUpdate = false, neverUpdate = false;
+let hasUpdated = false;
 let _active = null;
 
 async function InstallEmSDK(version = 'latest') {
-  // This does not "reinstall" a version forcibly, as it checks whether
-  // the version files already exist.
-  if (!_installed.includes(version)) {
+  // Retrieve the latest tags from git.
+  // Never update if specified, otherwise update once per runtime
+  // unless alwaysUpdate is true.
+  if (!neverUpdate && (alwaysUpdate || !hasUpdated)) {
+    hasUpdated = true;
     await emsdk__default['default'].update();
-    await emsdk__default['default'].install(version);
-    _installed.push(version);
+  }
+  
+  // Check if the requested EMSDK version is currently on disk. Only
+  // one version is "installed" at a time, and no other versions are cached.
+  if (!emsdk__default['default'].getInstalled(version)) {
+    await emsdk__default['default'].install(version, true);
+
+    // Also activate upon install, as this writes files to set up
+    // the environment scripts.
+    //
+    // Activation is only necessary upon install. Presuming the environment
+    // scripts aren't modified by user, subsequent calls need only
+    // invoke the `emsdk_env` script -- see emsdk.run().
+    await emsdk__default['default'].activate(version);
   }
 }
 
 async function ActivateEmSDK(version = 'latest') {
-  if (_active === version)
+  if (_active === version && !alwaysUpdate)
     return;
 
-  // Update and install if we haven't yet activated `version` in this
-  // runtime session.
+  // Update, install, and activate if the requested version is not on-disk.
   await InstallEmSDK(version);
-  
-  // Switch to `version`.
-  // Note we cannot have more than one version activated at the same time.
-  await emsdk__default['default'].activate(version);
   _active = version;
+}
+
+/**
+ * Always check server for Emscripten SDK updates for the current runtime session.
+ */
+function ForceEmSDKUpdates() {
+  alwaysUpdate = true;
+  neverUpdate = false;
+}
+
+/**
+ * Never check server for Emscripten SDK updates for the current runtime session.
+ */
+function DisableEmSDKUpdates() {
+  alwaysUpdate = false;
+  neverUpdate = true;
+}
+
+/**
+ * Resets forcing/disabling of Emscripten SDK updates.
+ */
+function ResetEmSDKUpdates() {
+  alwaysUpdate = false;
+  neverUpdate = false;
 }
 
 class Bootstrap {
@@ -1509,8 +1543,11 @@ exports.build = build;
 exports.clean = clean;
 exports.compile = compile;
 exports.configure = configure;
+exports.disableEmSDKUpdates = DisableEmSDKUpdates;
+exports.forceEmSDKUpdates = ForceEmSDKUpdates;
 exports.install = install;
 exports.installSDK = installSDK;
 exports.rebuild = rebuild;
 exports.reconfigure = reconfigure;
+exports.resetEmSDKUpdates = ResetEmSDKUpdates;
 exports.run = run;

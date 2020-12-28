@@ -157,14 +157,14 @@ If you have any issues with the environment, you may refer to [issue #1](https:/
 
 | Command | Description
 | ------- | -----------
-| `emscripten --configure [config_locator]` | Configure the project.
-| `emscripten --build [config_locator]` | Build the project and configure it first if there is no build cache.
-| `emscripten --clean [config_locator]` | Reset the project's build files.
-| `emscripten --install [config_locator]` | Copy the project's build output into a target directory.
-| `emscripten --reconfigure [config_locator]` | Clean the project then configure it.
-| `emscripten --rebuild [config_locator]` | Clean the project, configure it, then build.
-| `emscripten --compile [config_locator]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
-| `emscripten --installSDK [config_locator]` | Installs the requested EMSDK version from the given config.
+| `emscripten --configure [--no-update] [config_locator]` | Configure the project.
+| `emscripten --build [--no-update] [config_locator]` | Build the project and configure it first if there is no build cache.
+| `emscripten --clean [--no-update] [config_locator]` | Reset the project's build files.
+| `emscripten --install [--no-update] [config_locator]` | Copy the project's build output into a target directory.
+| `emscripten --reconfigure [--no-update] [config_locator]` | Clean the project then configure it.
+| `emscripten --rebuild [--no-update] [config_locator]` | Clean the project, configure it, then build.
+| `emscripten --compile [--no-update] [config_locator]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
+| `emscripten --installSDK [--no-update] [config_locator]` | Installs the requested EMSDK version from the given config.
 
 Each command can be chained left-to-right with the same build configuration.
 For example, this will build and install the given config:
@@ -174,6 +174,9 @@ npx emscripten --build --install [config_locator]
 ```
 
 For consistency with [node-gyp](https://github.com/nodejs/node-gyp), the first command may omit the `--` prefix.
+
+Use the `--no-update` flag to skip checking for EMSDK updates. This will speed up operations where
+you call the CLI multiple times.
 
 In all commands, `config_locator` is optional and refers to either:
 * The name of a settings object listed in `emscripten.settings.js`
@@ -292,6 +295,15 @@ emscripten.build()
         { /* child_process.spawn options, e.g., cwd */ }
     ));
 ```
+
+By default, updates are checked for Emscripten SDK once per runtime. You may modify this
+behavior as follows:
+
+| API | Description
+| ------- | -----------
+| `emscripten.forceEmSDKUpdates()` | Check for EMSDK updates on every SDK call in the current runtime.
+| `emscripten.disableEmSDKUpdates()` | Never check for EMSDK updates in the current runtime.
+| `emscripten.resetEmSDKUpdates()` | Reset to default update check behavior.
 
 ## Settings Files
 

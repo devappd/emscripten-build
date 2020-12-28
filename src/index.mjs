@@ -1,4 +1,9 @@
 import { ActivateEmSDK, InstallEmSDK } from './activate.mjs';
+export { 
+  ForceEmSDKUpdates as forceEmSDKUpdates,
+  DisableEmSDKUpdates as disableEmSDKUpdates,
+  ResetEmSDKUpdates as resetEmSDKUpdates
+} from './activate.mjs';
 import CMake from './cmake.mjs';
 import Make from './make.mjs';
 import Autotools from './autotools.mjs';

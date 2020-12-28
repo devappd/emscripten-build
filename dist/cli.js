@@ -47,31 +47,65 @@ var mergeWith__default = /*#__PURE__*/_interopDefaultLegacy(mergeWith);
 
 // activate.js
 
-let _installed = [];
+let alwaysUpdate = false, neverUpdate = false;
+let hasUpdated = false;
 let _active = null;
 
 async function InstallEmSDK(version = 'latest') {
-  // This does not "reinstall" a version forcibly, as it checks whether
-  // the version files already exist.
-  if (!_installed.includes(version)) {
+  // Retrieve the latest tags from git.
+  // Never update if specified, otherwise update once per runtime
+  // unless alwaysUpdate is true.
+  if (!neverUpdate && (alwaysUpdate || !hasUpdated)) {
+    hasUpdated = true;
     await emsdk__default['default'].update();
-    await emsdk__default['default'].install(version);
-    _installed.push(version);
+  }
+  
+  // Check if the requested EMSDK version is currently on disk. Only
+  // one version is "installed" at a time, and no other versions are cached.
+  if (!emsdk__default['default'].getInstalled(version)) {
+    await emsdk__default['default'].install(version, true);
+
+    // Also activate upon install, as this writes files to set up
+    // the environment scripts.
+    //
+    // Activation is only necessary upon install. Presuming the environment
+    // scripts aren't modified by user, subsequent calls need only
+    // invoke the `emsdk_env` script -- see emsdk.run().
+    await emsdk__default['default'].activate(version);
   }
 }
 
 async function ActivateEmSDK(version = 'latest') {
-  if (_active === version)
+  if (_active === version && !alwaysUpdate)
     return;
 
-  // Update and install if we haven't yet activated `version` in this
-  // runtime session.
+  // Update, install, and activate if the requested version is not on-disk.
   await InstallEmSDK(version);
-  
-  // Switch to `version`.
-  // Note we cannot have more than one version activated at the same time.
-  await emsdk__default['default'].activate(version);
   _active = version;
+}
+
+/**
+ * Always check server for Emscripten SDK updates for the current runtime session.
+ */
+function ForceEmSDKUpdates() {
+  alwaysUpdate = true;
+  neverUpdate = false;
+}
+
+/**
+ * Never check server for Emscripten SDK updates for the current runtime session.
+ */
+function DisableEmSDKUpdates() {
+  alwaysUpdate = false;
+  neverUpdate = true;
+}
+
+/**
+ * Resets forcing/disabling of Emscripten SDK updates.
+ */
+function ResetEmSDKUpdates() {
+  alwaysUpdate = false;
+  neverUpdate = false;
 }
 
 class Bootstrap {
@@ -1514,7 +1548,10 @@ var emscripten = /*#__PURE__*/Object.freeze({
   rebuild: rebuild,
   compile: compile,
   installSDK: installSDK,
-  run: run
+  run: run,
+  forceEmSDKUpdates: ForceEmSDKUpdates,
+  disableEmSDKUpdates: DisableEmSDKUpdates,
+  resetEmSDKUpdates: ResetEmSDKUpdates
 });
 
 async function main(argv) {
@@ -1537,48 +1574,52 @@ emscripten-build
 
 Build Usage: 
 
-emscripten --configure [config_locator]
+emscripten --configure [--no-update] [config_locator]
 
     Configure the project.
 
-emscripten --build [config_locator]
+emscripten --build [--no-update] [config_locator]
 
     Build the project and configure it first if necessary.
 
-emscripten --clean [config_locator]
+emscripten --clean [--no-update] [config_locator]
 
     Reset the project's build directories.
 
-emscripten --install [config_locator]
+emscripten --install [--no-update] [config_locator]
 
     Install the project's build files per the Makefile target.
 
-emscripten --reconfigure [config_locator]
+emscripten --reconfigure [--no-update] [config_locator]
 
     Clean the project then configure it.
 
-emscripten --rebuild [config_locator]
+emscripten --rebuild [--no-update] [config_locator]
 
     Clean the project, configure it, then build.
 
-emscripten --compile [config_locator]
+emscripten --compile [--no-update] [config_locator]
 
     Build the project. If the build fails, the project is cleaned then
     a rebuild is attempted.
 
-emscripten --installSDK [config_locator]
+emscripten --installSDK [--no-update] [config_locator]
 
     Install the given EMSDK version into the given path, per the build
     settings.
+
+Specify --no-update to skip updating the Emscripten SDK. By default,
+this command will check for updates on every call.
 
 A [config_locator] is the path to a settings or build configuration; or
 the path to a directory containing such a file; or the name of a
 settings object listed in "emscripten.settings.js". Default: "<cwd>"
 
 Each command can be chained left-to-right with the same configuration.
-For example, this builds and installs the given project:
+For example, this builds and installs the given project without
+updating the SDK:
 
-    emscripten --build --install [config_locator]
+    emscripten --build --install --no-update [config_locator]
 
 ------------------------------------------------------------------------
 
@@ -1607,12 +1648,21 @@ emscripten <command> [arg...]
     if ((cmd.startsWith('--') || firstCmd)
         && verbs.indexOf(verbCmd) >= 0
     ) {
-      // Get the configLocator at the end of the cmd string. This never
-      // starts with --.
-      if (firstCmd && args.length) {
-        let test = args[args.length-1];
-        if (!test.startsWith('--'))
-          configLocator = args.pop();
+      if (firstCmd) {
+        // Now that we know we're running build settings, handle --no-update
+        let noUpdate = args.findIndex(item => '--no-update' === item.toLowerCase());
+        if (noUpdate >= 0) {
+          args.splice(noUpdate);
+          DisableEmSDKUpdates();
+        }
+
+        // Get the configLocator at the end of the cmd string. This never
+        // starts with --
+        if (args.length) {
+          let test = args[args.length-1];
+          if (!test.startsWith('--'))
+            configLocator = args.pop();
+        }
       }
 
       // installSDK is not a bootstrap verb itself, but it does return
