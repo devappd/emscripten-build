@@ -101,7 +101,7 @@ emscripten <command> [arg...]
         // Now that we know we're running build settings, handle --no-update
         let noUpdate = args.findIndex(item => '--no-update' === item.toLowerCase());
         if (noUpdate >= 0) {
-          args.splice(noUpdate);
+          args.splice(noUpdate, 1);
           emscripten.disableEmSDKUpdates();
         }
 
