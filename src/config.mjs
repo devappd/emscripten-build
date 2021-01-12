@@ -2,6 +2,7 @@ import mergeWith from 'lodash.mergewith';
 import path from 'path';
 import fs from 'fs';
 import { MainModuleDir, IsDir, IsFile, TryResolvePath } from './utils.mjs';
+import emsdk from 'emscripten-sdk';
 
 function _constructMasterConfig(buildFilePath) {
   // buildFilePath is assumed to be an exact path to CMakeLists.txt/configure/Makefile
@@ -236,7 +237,11 @@ export async function GetWorkingConfig(a, b) {
   if (emsdkPath && !('emsdk' in workingSettings))
     workingSettings.emsdk = emsdkPath;
 
-  if (emsdkVersion && !('emsdkVersion' in workingSettings))
+  // If `emscripten-sdk` is versioned, don't pass any version to the settings
+  if (emsdk.version) { 
+    if ('emsdkVersion' in workingSettings)
+      delete workingSettings.emsdkVersion;
+  } else if (emsdkVersion && !('emsdkVersion' in workingSettings))
     workingSettings.emsdkVersion = emsdkVersion;
 
   if (configPath && !('_configPath' in workingSettings))

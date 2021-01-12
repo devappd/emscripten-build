@@ -2,7 +2,7 @@ import Bootstrap from './bootstrap.mjs';
 import path from 'path';
 import * as environment from './environment.mjs';
 import fs from 'fs';
-import emsdk from 'emscripten-sdk-npm';
+import emsdk from 'emscripten-sdk';
 import { IsDir, TryResolvePath } from './utils.mjs';
 
 export default class CMake extends Bootstrap {

@@ -1,5 +1,8 @@
 import { ActivateEmSDK } from './activate.mjs';
-import emsdk from 'emscripten-sdk-npm';
+import emsdk from 'emscripten-sdk';
+
+// If `emscripten-sdk` is versioned, get that package's version
+const defaultVersion = emsdk.version || 'latest';
 
 export default class Bootstrap {
   constructor(workingSettings) {
@@ -19,7 +22,7 @@ export default class Bootstrap {
   _validateEmsdkSettings() {
     if (!('emsdkVersion' in this.settings)
         || !this.settings.emsdkVersion)
-      this.settings.emsdkVersion = 'latest';
+      this.settings.emsdkVersion = defaultVersion;
   }
 
   _validateDefinitionSettings(stepSettings) {

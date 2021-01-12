@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-var emsdk = require('emscripten-sdk-npm');
+var emsdk = require('emscripten-sdk');
 var path = require('path');
 var getInstalledPathCJS = require('get-installed-path');
 var os = require('os');
@@ -43,11 +43,13 @@ var mergeWith__default = /*#__PURE__*/_interopDefaultLegacy(mergeWith);
 
 // activate.js
 
+const defaultVersion = emsdk__default['default'].version || 'latest';
+
 let alwaysUpdate = false, neverUpdate = false;
 let hasUpdated = false;
 let _active = null;
 
-async function InstallEmSDK(version = 'latest') {
+async function InstallEmSDK(version = defaultVersion) {
   // Retrieve the latest tags from git.
   // Never update if specified, otherwise update once per runtime
   // unless alwaysUpdate is true.
@@ -56,6 +58,8 @@ async function InstallEmSDK(version = 'latest') {
     await emsdk__default['default'].checkout();
     await emsdk__default['default'].update();
   }
+
+  version = emsdk__default['default'].validateVersion(version);
   
   // Check if the requested EMSDK version is currently on disk. Only
   // one version is "installed" at a time, and no other versions are cached.
@@ -72,7 +76,7 @@ async function InstallEmSDK(version = 'latest') {
   }
 }
 
-async function ActivateEmSDK(version = 'latest') {
+async function ActivateEmSDK(version = defaultVersion) {
   if (_active === version && !alwaysUpdate)
     return;
 
@@ -105,6 +109,9 @@ function ResetEmSDKUpdates() {
   neverUpdate = false;
 }
 
+// If `emscripten-sdk` is versioned, get that package's version
+const defaultVersion$1 = emsdk__default['default'].version || 'latest';
+
 class Bootstrap {
   constructor(workingSettings) {
     this.settings = workingSettings;
@@ -123,7 +130,7 @@ class Bootstrap {
   _validateEmsdkSettings() {
     if (!('emsdkVersion' in this.settings)
         || !this.settings.emsdkVersion)
-      this.settings.emsdkVersion = 'latest';
+      this.settings.emsdkVersion = defaultVersion$1;
   }
 
   _validateDefinitionSettings(stepSettings) {
@@ -1354,7 +1361,11 @@ async function GetWorkingConfig(a, b) {
   if (emsdkPath && !('emsdk' in workingSettings))
     workingSettings.emsdk = emsdkPath;
 
-  if (emsdkVersion && !('emsdkVersion' in workingSettings))
+  // If `emscripten-sdk` is versioned, don't pass any version to the settings
+  if (emsdk__default['default'].version) { 
+    if ('emsdkVersion' in workingSettings)
+      delete workingSettings.emsdkVersion;
+  } else if (emsdkVersion && !('emsdkVersion' in workingSettings))
     workingSettings.emsdkVersion = emsdkVersion;
 
   if (configPath && !('_configPath' in workingSettings))

@@ -124,8 +124,9 @@ The install command is:
 npm install --save-dev git+https://github.com/devappd/emscripten-build-npm.git
 ```
 
-By default, EMSDK is installed into your `node_modules` tree. You may specify a custom path by
-[modifying your NPM config](https://docs.npmjs.com/cli/v6/using-npm/config) via one of the following:
+By default, EMSDK is installed into your `node_modules` tree. Before calling `npm install`, you may
+specify a custom path by [modifying your NPM config](https://docs.npmjs.com/cli/v6/using-npm/config)
+via one of the following:
 
 |Method|Command
 |------|-------
@@ -135,11 +136,20 @@ By default, EMSDK is installed into your `node_modules` tree. You may specify a 
 
 You should specify your own path in order to save disk space. In addition, if you are running on Windows, EMSDK installation will fail if your install path is longer than 85 characters.
 
+### Emscripten SDK
+
+This package uses the [emscripten-sdk](https://github.com/devappd/emsdk-npm) package to install
+the EMSDK on your system. You configure the emscripten version by specifying the install version
+for `emscripten-sdk`:
+
+```sh
+npm install --save-dev git+https://github.com/devappd/emsdk-npm#release-2.0.11
+```
+
 ### Dependencies
 
 This package installs these dependencies:
 
-* [emsdk-npm](https://github.com/devappd/emsdk-npm) -- Installs EMSDK into a location of your choice.
 * [cmake-binaries](https://github.com/devappd/cmake-binaries) -- Locates CMake on your system
 or installs it into your `node_modules`.
 * [ninja-binaries](https://github.com/Banno/ninja-binaries) -- Installs Ninja into your `node_modules`.
@@ -162,7 +172,7 @@ If you have any issues with the environment, you may refer to [issue #1](https:/
 | `emscripten --reconfigure [--no-update] [config_locator]` | Clean the project then configure it.
 | `emscripten --rebuild [--no-update] [config_locator]` | Clean the project, configure it, then build.
 | `emscripten --compile [--no-update] [config_locator]` | Build the project. If the build fails, the project is cleaned then a rebuild is attempted.
-| `emscripten --installSDK [--no-update] [config_locator]` | Installs the requested EMSDK version from the given config.
+| `emscripten --installSDK [--no-update] [config_locator]` | Installs the EMSDK version as specified in `package.json`.
 
 Each command can be chained left-to-right with the same build configuration.
 For example, this will build and install the given config:
@@ -189,21 +199,10 @@ will be selected.
 
 ### Emscripten SDK Usage
 
-You may also run an arbitrary command under the Emscripten SDK. This forces
-usage of the `latest` SDK version. This operation cannot be chained:
+You may also run an arbitrary command under the Emscripten SDK. This operation cannot be chained:
 
 ```sh
 npx emscripten <command> [args...]
-```
-
-If you need to use a specific SDK version, use the [emsdk-npm](https://github.com/devappd/emsdk-npm)
-commands instead:
-
-```sh
-npx emsdk-checkout
-npx emsdk install [version]
-npx emsdk activate [version]
-npx emsdk-run <command> [args...]
 ```
 
 ## JavaScript Usage
@@ -268,8 +267,7 @@ emscripten.configure()
 
 ### Emscripten SDK Usage
 
-With `emscripten.run()`, you can run any command under the Emscripten SDK. This forces usage of
-the `latest` SDK version. It does not return a bootstrap.
+With `emscripten.run()`, you can run any command under the Emscripten SDK. It does not return a bootstrap.
 
 ```js
 const emscripten = require('emscripten-build');
@@ -282,7 +280,7 @@ emscripten.run('command',
 ```
 
 You can also invoke `run()` on an existing bootstrap. In this case, it can be chained
-with other bootstrap calls, and it uses the SDK version specified in your build settings:
+with other bootstrap calls:
 
 ```js
 const emscripten = require('emscripten-build');
@@ -293,15 +291,6 @@ emscripten.build()
         { /* child_process.spawn options, e.g., cwd */ }
     ));
 ```
-
-By default, updates are checked for Emscripten SDK once per runtime. You may modify this
-behavior as follows:
-
-| API | Description
-| ------- | -----------
-| `emscripten.forceEmSDKUpdates()` | Check for EMSDK updates on every SDK call in the current runtime.
-| `emscripten.disableEmSDKUpdates()` | Never check for EMSDK updates in the current runtime.
-| `emscripten.resetEmSDKUpdates()` | Reset to default update check behavior.
 
 ## Settings Files
 
@@ -319,17 +308,12 @@ relative to your current working directory.
 
 ## Top-Level
 
-The settings file lists some top-level fields such as `emsdkVersion`, `default`, and your project's settings objects.
+The settings file lists some top-level fields such as `default` and your project's settings objects.
 
 In this top-level object, you may list multiple settings objects by name:
 
 ```js
 module.exports = {
-    // Selects the EMSDK version to use. This can also be specified
-    // inside a named config.
-    // Default: "latest"
-    "emsdkVersion": "latest",
-
     // Selects the settings object to use if one is not specified
     // on the command line.
     //
