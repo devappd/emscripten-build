@@ -13,6 +13,7 @@ export async function InstallEmSDK(version = 'latest') {
   // unless alwaysUpdate is true.
   if (!neverUpdate && (alwaysUpdate || !hasUpdated)) {
     hasUpdated = true;
+    await emsdk.checkout();
     await emsdk.update();
   }
   
