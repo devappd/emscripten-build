@@ -57,6 +57,7 @@ async function InstallEmSDK(version = 'latest') {
   // unless alwaysUpdate is true.
   if (!neverUpdate && (alwaysUpdate || !hasUpdated)) {
     hasUpdated = true;
+    await emsdk__default['default'].checkout();
     await emsdk__default['default'].update();
   }
   
