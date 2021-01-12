@@ -1,5 +1,5 @@
 import { ActivateEmSDK } from './activate.mjs';
-import emsdk from 'emsdk-npm';
+import emsdk from 'emscripten-sdk-npm';
 
 export default class Bootstrap {
   constructor(workingSettings) {

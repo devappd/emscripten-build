@@ -1,5 +1,5 @@
 import Bootstrap from './bootstrap.mjs';
-import emsdk from 'emsdk-npm';
+import emsdk from 'emscripten-sdk-npm';
 import { checkMakeInstalled, makeCommand } from './environment.mjs';
 import { TryResolvePath } from './utils.mjs';
 

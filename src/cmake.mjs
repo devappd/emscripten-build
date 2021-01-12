@@ -3,7 +3,7 @@ import path from 'path';
 import * as environment from './environment.mjs';
 import glob from 'glob';
 import fs from 'fs';
-import emsdk from 'emsdk-npm';
+import emsdk from 'emscripten-sdk-npm';
 import shelljs from 'shelljs';
 import { MainModuleDir, IsDir, TryResolvePath } from './utils.mjs';
 

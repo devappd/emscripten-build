@@ -2,7 +2,7 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var emsdk = require('emsdk-npm');
+var emsdk = require('emscripten-sdk-npm');
 var path = require('path');
 var getInstalledPathCJS = require('get-installed-path');
 var os = require('os');

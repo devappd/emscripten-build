@@ -1,7 +1,7 @@
 // activate.js
 // On first bootstrap instantiation, install and activate the EMSDK.
 
-import emsdk from 'emsdk-npm';
+import emsdk from 'emscripten-sdk-npm';
 
 let alwaysUpdate = false, neverUpdate = false;
 let hasUpdated = false;

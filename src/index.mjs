@@ -7,7 +7,7 @@ export {
 import CMake from './cmake.mjs';
 import Make from './make.mjs';
 import Autotools from './autotools.mjs';
-import emsdk from 'emsdk-npm';
+import emsdk from 'emscripten-sdk-npm';
 import { GetWorkingConfig } from './config.mjs';
 
 async function _getBootstrap(a, b) {

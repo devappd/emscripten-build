@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/devappd/emscripten-build-npm#readme",
   "dependencies": {
-    "emsdk-npm": "git+https://github.com/devappd/emsdk-npm",
+    "emscripten-sdk-npm": "git+https://github.com/devappd/emsdk-npm.git",
     "get-installed-path": "^4.0.8",
     "lodash.mergewith": "^4.6.2",
     "resolve-path": "^1.4.0",
@@ -36,7 +36,7 @@
     "msbuild": "^1.1.3"
   },
   "devDependencies": {
-    "rollup": "^2.33.3",
+    "rollup": "^2.36.1",
     "rollup-plugin-preserve-shebang": "^1.0.1"
   }
 }
