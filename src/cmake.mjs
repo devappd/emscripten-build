@@ -196,19 +196,6 @@ export default class CMake extends Bootstrap {
       this.makeSubCommand = null;
       return;
     }
-
-    // MSBuild
-    // test for 'Visual Studio 14', etc.
-    let hasVS = fromCache
-      ? (glob.sync("*.sln", { cwd: this.settings.build.path }).length > 0)
-      : generator.includes('visual studio ');
-
-    if (hasVS) {
-      await environment.checkMSBuildInstalled();
-      this.makeCommand = environment.msbuildCommand;
-      this.makeSubCommand = null;
-      return;
-    }
   }
 
 ////////////////////////////////////////////////////////////////////////

@@ -8,7 +8,7 @@ var getInstalledPathCJS = require('get-installed-path');
 var os = require('os');
 var fs = require('fs');
 var which = require('which');
-var glob = require('glob');
+require('glob');
 var shelljs = require('shelljs');
 var resolvePath = require('resolve-path');
 var mergeWith = require('lodash.mergewith');
@@ -41,7 +41,6 @@ var getInstalledPathCJS__default = /*#__PURE__*/_interopDefaultLegacy(getInstall
 var os__default = /*#__PURE__*/_interopDefaultLegacy(os);
 var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
 var which__default = /*#__PURE__*/_interopDefaultLegacy(which);
-var glob__default = /*#__PURE__*/_interopDefaultLegacy(glob);
 var shelljs__default = /*#__PURE__*/_interopDefaultLegacy(shelljs);
 var resolvePath__default = /*#__PURE__*/_interopDefaultLegacy(resolvePath);
 var mergeWith__default = /*#__PURE__*/_interopDefaultLegacy(mergeWith);
@@ -374,42 +373,6 @@ async function checkCMakeInstalled() {
 }
 
 ////////////////////////////////////////////////////////////////////////
-// MSBuild
-////////////////////////////////////////////////////////////////////////
-
-let _MSBuildExists = false;
-let msbuildCommand = 'msbuild';
-
-async function checkMSBuildInstalled() {
-  if (_MSBuildExists)
-    return true;
-
-  // Check if MSBuild is in path
-  try {
-    msbuildCommand = await which__default['default']('msbuild');
-    _MSBuildExists = true;
-    return true;
-  } catch (e) {
-    // fall through, presume not in PATH
-  }
-
-  // No results? Rely on `msbuild` package
-  var msbuild = await _tryImport('msbuild');
-
-  // This always returns a path, whether or not it exists
-  let msbuildPath = msbuild.buildexe();
-
-  if (!fs__default['default'].existsSync(msbuildPath))
-    throw new Error('MSBuild was not found!');
-
-  // While we're here, populate the MSBuild command
-  msbuildCommand = msbuildPath;
-
-  // If successful, persist this check per runtime session
-  _MSBuildExists = true;
-}
-
-////////////////////////////////////////////////////////////////////////
 // Ninja
 ////////////////////////////////////////////////////////////////////////
 
@@ -730,19 +693,6 @@ class CMake extends Bootstrap {
     if (hasMake) {
       await checkMakeInstalled();
       this.makeCommand = makeCommand;
-      this.makeSubCommand = null;
-      return;
-    }
-
-    // MSBuild
-    // test for 'Visual Studio 14', etc.
-    let hasVS = fromCache
-      ? (glob__default['default'].sync("*.sln", { cwd: this.settings.build.path }).length > 0)
-      : generator.includes('visual studio ');
-
-    if (hasVS) {
-      await checkMSBuildInstalled();
-      this.makeCommand = msbuildCommand;
       this.makeSubCommand = null;
       return;
     }

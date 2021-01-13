@@ -144,8 +144,6 @@ This package installs these dependencies:
 or installs it into your `node_modules`.
 * [ninja-binaries](https://github.com/Banno/ninja-binaries) -- Installs Ninja into your `node_modules`.
 (Your system's Ninja will be used if it already exists.)
-* [msbuild](https://github.com/jhaker/nodejs-msbuild) -- Locates MSBuild (Visual Studio) on your
-system. If you wish to use Visual Studio, you'll need to have it installed on your system.
 
 Usage of `make`, `configure`, `mingw32-make`, and any other build toolset, will
 require you to install those systems by yourself. Have those commands available
@@ -522,7 +520,7 @@ When specifying a cache definition, the value `true` is expressed as `ON` and th
 
         // Type of build files to generate. Specify as if you were passing -G to CMake.
         // Default: "Ninja"
-        // Possible values: "Ninja"|"Unix Makefiles"|"Visual Studio 16"|etc.
+        // Possible values: "Ninja"|"Unix Makefiles"|etc.
         "generator": "Ninja",
 
         // Build type.

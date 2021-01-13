@@ -63,42 +63,6 @@ export async function checkCMakeInstalled() {
 }
 
 ////////////////////////////////////////////////////////////////////////
-// MSBuild
-////////////////////////////////////////////////////////////////////////
-
-let _MSBuildExists = false;
-export let msbuildCommand = 'msbuild';
-
-export async function checkMSBuildInstalled() {
-  if (_MSBuildExists)
-    return true;
-
-  // Check if MSBuild is in path
-  try {
-    msbuildCommand = await which('msbuild');
-    _MSBuildExists = true;
-    return true;
-  } catch (e) {
-    // fall through, presume not in PATH
-  }
-
-  // No results? Rely on `msbuild` package
-  var msbuild = await _tryImport('msbuild');
-
-  // This always returns a path, whether or not it exists
-  let msbuildPath = msbuild.buildexe();
-
-  if (!fs.existsSync(msbuildPath))
-    throw new Error('MSBuild was not found!');
-
-  // While we're here, populate the MSBuild command
-  msbuildCommand = msbuildPath;
-
-  // If successful, persist this check per runtime session
-  _MSBuildExists = true;
-}
-
-////////////////////////////////////////////////////////////////////////
 // Ninja
 ////////////////////////////////////////////////////////////////////////
 
