@@ -1,11 +1,9 @@
 import Bootstrap from './bootstrap.mjs';
 import path from 'path';
 import * as environment from './environment.mjs';
-import glob from 'glob';
 import fs from 'fs';
 import emsdk from 'emscripten-sdk-npm';
-import shelljs from 'shelljs';
-import { MainModuleDir, IsDir, TryResolvePath } from './utils.mjs';
+import { IsDir, TryResolvePath } from './utils.mjs';
 
 export default class CMake extends Bootstrap {
   constructor(workingSettings) {
@@ -255,9 +253,7 @@ export default class CMake extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   __ensureBuildDirExists() {
-    let result = shelljs.mkdir('-p', this.settings.build.path);
-    if (result.code !== 0)
-      throw new Error(result.stderr);
+    fs.mkdirSync(this.settings.build.path, { recursive: true });
   }
 
   async _bindConfigCommand(impl, ...args) {

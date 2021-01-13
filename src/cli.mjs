@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import * as emscripten from './index.mjs';
-import { disableEmSDKUpdates } from './index.mjs';
 
 async function main(argv) {
   let args = argv.slice(2);

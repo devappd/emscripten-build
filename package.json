@@ -27,7 +27,6 @@
     "get-installed-path": "^4.0.8",
     "lodash.mergewith": "^4.6.2",
     "resolve-path": "^1.4.0",
-    "shelljs": "^0.8.4",
     "which": "^2.0.2"
   },
   "optionalDependencies": {

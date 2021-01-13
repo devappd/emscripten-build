@@ -7,8 +7,6 @@ var getInstalledPathCJS = require('get-installed-path');
 var os = require('os');
 var fs = require('fs');
 var which = require('which');
-require('glob');
-var shelljs = require('shelljs');
 var resolvePath = require('resolve-path');
 var mergeWith = require('lodash.mergewith');
 
@@ -40,7 +38,6 @@ var getInstalledPathCJS__default = /*#__PURE__*/_interopDefaultLegacy(getInstall
 var os__default = /*#__PURE__*/_interopDefaultLegacy(os);
 var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
 var which__default = /*#__PURE__*/_interopDefaultLegacy(which);
-var shelljs__default = /*#__PURE__*/_interopDefaultLegacy(shelljs);
 var resolvePath__default = /*#__PURE__*/_interopDefaultLegacy(resolvePath);
 var mergeWith__default = /*#__PURE__*/_interopDefaultLegacy(mergeWith);
 
@@ -754,9 +751,7 @@ class CMake extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   __ensureBuildDirExists() {
-    let result = shelljs__default['default'].mkdir('-p', this.settings.build.path);
-    if (result.code !== 0)
-      throw new Error(result.stderr);
+    fs__default['default'].mkdirSync(this.settings.build.path, { recursive: true });
   }
 
   async _bindConfigCommand(impl, ...args) {
@@ -1097,9 +1092,7 @@ class Autotools extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   __ensureBuildDirExists() {
-    let result = shelljs__default['default'].mkdir('-p', this.settings.build.path);
-    if (result.code !== 0)
-      throw new Error(result.stderr);
+    fs__default['default'].mkdirSync(this.settings.build.path, { recursive: true });
   }
 
   async _bindConfigCommand(impl, ...args) {

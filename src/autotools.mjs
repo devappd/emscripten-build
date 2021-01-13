@@ -2,7 +2,6 @@ import Bootstrap from './bootstrap.mjs';
 import emsdk from 'emscripten-sdk-npm';
 import { checkMakeInstalled, makeCommand } from './environment.mjs';
 import { TryResolvePath } from './utils.mjs';
-import shelljs from 'shelljs';
 import path from 'path';
 import fs from 'fs';
 
@@ -160,9 +159,7 @@ export default class Autotools extends Bootstrap {
 ////////////////////////////////////////////////////////////////////////
 
   __ensureBuildDirExists() {
-    let result = shelljs.mkdir('-p', this.settings.build.path);
-    if (result.code !== 0)
-      throw new Error(result.stderr);
+    fs.mkdirSync(this.settings.build.path, { recursive: true });
   }
 
   async _bindConfigCommand(impl, ...args) {
