@@ -1,4 +1,4 @@
-# emscripten-build-npm
+# emscripten-build
 
 [![e2e-test](https://github.com/devappd/emscripten-build-npm/workflows/e2e-test/badge.svg)](https://github.com/devappd/emscripten-build-npm/actions?query=workflow%3Ae2e-test) [![emscripten-build](https://img.shields.io/npm/v/emscripten-build)](https://www.npmjs.com/package/emscripten-build) [![mit-license](https://img.shields.io/github/license/devappd/emscripten-build-npm?color=yellow)](https://github.com/devappd/emscripten-build-npm/blob/master/LICENSE)
 
@@ -10,7 +10,7 @@ WASM project into your packaging scripts.
 
 ## How to Use
 
-This package assumes that you have a C/C++ project that already supports Emscripten. The recommended usage is to run builds with [CMake](https://cmake.org) and [Ninja](https://ninja-build.org). Support also exists for [Makefile](https://www.gnu.org/software/make/manual/make.html) and [Autotools](https://www.gnu.org/software/automake/manual/html_node/index.html).
+This package assumes that you have a C/C++ project that can build with Emscripten via a Makefile. The recommended usage is to run builds with [CMake](https://cmake.org) and [Ninja](https://ninja-build.org). Support also exists for [GNU Make](https://www.gnu.org/software/make/manual/make.html) and [Autotools](https://www.gnu.org/software/automake/manual/html_node/index.html).
 
 Building can be made as simple as switching to your project directory and entering in the command line:
 
@@ -56,15 +56,7 @@ module.exports = {
 };
 ```
 
-For detailed information on how to use this package, see these guides:
-
-* [Build Settings and Basic Usage](https://github.com/devappd/emscripten-build-npm/blob/main/docs/Build-Settings.md)
-* [Command Line](https://github.com/devappd/emscripten-build-npm/blob/main/docs/Command-Line-Usage.md)
-* [JavaScript API](https://github.com/devappd/emscripten-build-npm/blob/main/docs/Javascript-API.md)
-
-You may also visit this repository to see different examples on how to use this package:
-
-* [emscripten-npm-examples](https://github.com/devappd/emscripten-npm-examples) -- Contains "Hello World" examples, an OpenGL demo, and a library project.
+See the end of this document for detailed guides.
 
 ## Install
 
@@ -86,9 +78,18 @@ By default, the Emscripten SDK is installed into your `node_modules` tree. You m
 
 The [Emscripten SDK](https://www.npmjs.com/package/emscripten-sdk), [CMake](https://www.npmjs.com/package/@devappd/cmake-binaries), and [Ninja](https://www.npmjs.com/package/@devappd/ninja-binaries-npm) programs are installed as NPM dependencies.
 
-For more details on installation, see:
+## See Also
+
+For detailed information on how to use this package, see these guides:
 
 * [Installation](https://github.com/devappd/emscripten-build-npm/blob/main/docs/Installation.md)
+* [Build Settings and Basic Usage](https://github.com/devappd/emscripten-build-npm/blob/main/docs/Build-Settings.md)
+* [Command Line](https://github.com/devappd/emscripten-build-npm/blob/main/docs/Command-Line-Usage.md)
+* [JavaScript API](https://github.com/devappd/emscripten-build-npm/blob/main/docs/Javascript-API.md)
+
+Visit this repository to see different examples on how to use this package:
+
+* [emscripten-npm-examples](https://github.com/devappd/emscripten-npm-examples) -- Contains "Hello World" examples, an OpenGL demo, and a library project.
 
 ## License
 
