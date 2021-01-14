@@ -1,7 +1,7 @@
 {
   "name": "emscripten-build",
-  "version": "1.0.1",
-  "description": "Configure and build a C/C++ emscripten project.",
+  "version": "1.0.2",
+  "description": "Build a C++ WebAssembly program inside your Node.js packaging workflow.",
   "main": "./dist/api.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/devappd/emscripten-build-npm"
+    "url": "https://github.com/devappd/emscripten-build"
   },
-  "author": "devappd",
+  "author": "devappd <devappd@outlook.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/devappd/emscripten-build-npm/issues"
+    "url": "https://github.com/devappd/emscripten-build/issues"
   },
-  "homepage": "https://github.com/devappd/emscripten-build-npm#readme",
+  "homepage": "https://github.com/devappd/emscripten-build#readme",
   "keywords": [
     "emscripten",
     "cmake",
