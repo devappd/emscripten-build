@@ -29,7 +29,7 @@ This package installs these dependencies into your `node_modules` tree:
 
 * [emscripten-sdk-npm](https://github.com/devappd/emsdk-npm)
 * [@devappd/cmake-binaries](https://github.com/devappd/cmake-binaries)
-* [ninja-binaries](https://github.com/banno/ninja-binaries)
+* [ninja-binaries](https://github.com/devappd/ninja-binaries)
 
 Usage of `make`, `configure`, `mingw32-make`, and any other build toolset, will
 require you to install those systems by yourself. Have those commands available

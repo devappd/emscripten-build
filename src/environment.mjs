@@ -91,13 +91,13 @@ export async function checkNinjaInstalled() {
   let ninjaPath;
   try {
     // Prefer local node_modules
-    ninjaPath = await getInstalledPath('ninja-binaries', { local: true });
+    ninjaPath = await getInstalledPath('@devappd/ninja-binaries-npm', { local: true });
   } catch (e) {
     try {
       // Try global node_modules
-      ninjaPath = await getInstalledPath('ninja-binaries');
+      ninjaPath = await getInstalledPath('@devappd/ninja-binaries-npm');
     } catch (e) {
-      throw new Error('ninja was not found! To resolve, you may install `npm install -g ninja-binaries`.')
+      throw new Error('ninja was not found! To resolve, you may install `npm install -g @devappd/ninja-binaries-npm`.')
     }
   }
 
