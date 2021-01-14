@@ -11,7 +11,7 @@ jobs:
   tests:
     strategy:
       matrix:
-        os: [macos-latest,windows-latest,ubuntu-latest]
+        os: [windows-latest] # [macos-latest,windows-latest,ubuntu-latest]
         node-version: [15.x, 14.x, 12.x]
         example-test:
           - Example-01-HelloWorld
@@ -70,7 +70,7 @@ jobs:
       uses: actions/github-script@v3
       with:
         script: |
-          const targetPath = "${{ github.workspace }}/examples/${{ matrix.example-test }}/dist";
+          const targetPath = "${GITHUB_WORKSPACE//\\//}/examples/${{ matrix.example-test }}/dist";
           if (!require('fs').readdirSync(targetPath).filter(fn => fn.endsWith('.js')).length)
             throw new Error('JS build artifact was not found!');
           if (!require('fs').readdirSync(targetPath).filter(fn => fn.endsWith('.wasm')).length)
