@@ -1,5 +1,7 @@
 # emscripten-build-npm
 
+[![e2e-test](https://github.com/devappd/emscripten-build-npm/workflows/e2e-test/badge.svg)](https://github.com/devappd/emscripten-build-npm/actions?query=workflow%3Ae2e-test) [![emscripten-build](https://img.shields.io/npm/v/emscripten-build)](https://www.npmjs.com/package/emscripten-build) [![mit-license](https://img.shields.io/github/license/devappd/emscripten-build-npm?color=yellow)](https://github.com/devappd/emscripten-build-npm/blob/master/LICENSE)
+
 Build your C++ WebAssembly project inside your Node.js build workflow.
 
 This package uses the [Emscripten SDK](https://emscripten.org/) to compile your C++ to WebAssembly. It
