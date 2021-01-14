@@ -37,15 +37,15 @@
     "dist/**/*"
   ],
   "dependencies": {
-    "emscripten-sdk-npm": "git+https://github.com/devappd/emsdk-npm.git",
+    "emscripten-sdk-npm": "^0.3.0",
     "get-installed-path": "^4.0.8",
     "lodash.mergewith": "^4.6.2",
     "resolve-path": "^1.4.0",
     "which": "^2.0.2"
   },
   "optionalDependencies": {
-    "cmake-binaries": "git+https://github.com/devappd/cmake-binaries",
-    "ninja-binaries": "git+https://github.com/devappd/ninja-binaries"
+    "@devappd/cmake-binaries": "^1.0.0",
+    "@devappd/ninja-binaries": "^1.10.2"
   },
   "devDependencies": {
     "rollup": "^2.36.1",

@@ -34,7 +34,7 @@ export async function checkCMakeInstalled() {
   // Check if CMake is installed
   let cmake;
   try {
-    cmake = await _tryImport('cmake-binaries');
+    cmake = await _tryImport('@devappd/cmake-binaries');
   } catch (e) {
     // doesn't exist, try which
     try {
@@ -55,7 +55,7 @@ export async function checkCMakeInstalled() {
 
     if (!cmake.exists())
       throw new Error('CMake was not found! Try running '
-        + '`npm explore cmake-binaries -- npm run install -- --force`');
+        + '`npm explore @devappd/cmake-binaries -- npm run install -- --force`');
   }
 
   // While we're here, populate the CMake command
@@ -91,13 +91,13 @@ export async function checkNinjaInstalled() {
   let ninjaPath;
   try {
     // Prefer local node_modules
-    ninjaPath = await getInstalledPath('ninja-binaries', { local: true });
+    ninjaPath = await getInstalledPath('@devappd/ninja-binaries', { local: true });
   } catch (e) {
     try {
       // Try global node_modules
-      ninjaPath = await getInstalledPath('ninja-binaries');
+      ninjaPath = await getInstalledPath('@devappd/ninja-binaries');
     } catch (e) {
-      throw new Error('ninja was not found! To resolve, you may install `npm install -g ninja-binaries`.')
+      throw new Error('ninja was not found! To resolve, you may install `npm install -g @devappd/ninja-binaries`.')
     }
   }
 
