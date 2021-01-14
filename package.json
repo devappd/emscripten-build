@@ -45,7 +45,7 @@
   },
   "optionalDependencies": {
     "@devappd/cmake-binaries": "^1.0.0",
-    "@devappd/ninja-binaries": "^1.10.2"
+    "ninja-binaries": "^1.10.1"
   },
   "devDependencies": {
     "rollup": "^2.36.1",

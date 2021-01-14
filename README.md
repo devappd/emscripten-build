@@ -82,7 +82,7 @@ By default, the Emscripten SDK is installed into your `node_modules` tree. You m
 | Set an environment variable | `set NPM_CONFIG_EMSDK=/your/absolute/custom/path`
 | Use a config argument to NPM temporarily | `npm [command] --emsdk="/your/absolute/custom/path"`
 
-The [Emscripten SDK](https://www.npmjs.com/package/emscripten-sdk), [CMake](https://www.npmjs.com/package/cmake-binaries), and [Ninja](https://www.npmjs.com/package/@devappd/ninja-binaries) programs are installed as NPM dependencies.
+The [Emscripten SDK](https://www.npmjs.com/package/emscripten-sdk), [CMake](https://www.npmjs.com/package/cmake-binaries), and [Ninja](https://www.npmjs.com/package/ninja-binaries) programs are installed as NPM dependencies.
 
 For more details on installation, see:
 
