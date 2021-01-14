@@ -49,9 +49,14 @@ export async function checkCMakeInstalled() {
   }
 
   // Check node_modules
-  if (!cmake.exists())
-    throw new Error('CMake was not found! Try running '
-      + '`npm explore cmake-binaries -- npm run install -- --force`');
+  if (!cmake.exists()) {
+    // Attempt to install
+    cmake.install(true);
+
+    if (!cmake.exists())
+      throw new Error('CMake was not found! Try running '
+        + '`npm explore cmake-binaries -- npm run install -- --force`');
+  }
 
   // While we're here, populate the CMake command
   cMakeCommand = cmake.getCommand();
