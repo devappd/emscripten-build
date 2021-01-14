@@ -1,0 +1,77 @@
+name: e2e-test
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**LICENSE'
+      - '**.gitignore'
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        os: [macos-latest,windows-latest,ubuntu-latest]
+        node-version: [15.x, 14.x, 12.x]
+        example-test:
+          - Example-01-HelloWorld
+          - Example-02-Make
+          - Example-03-CMake
+          - Example-04-Autotools
+          - Example-05-Library
+          - Example-06-SDL-OpenGL
+        exclude:
+          - os: windows-latest
+            example-test: Example-04-Autotools
+
+    continue-on-error: true
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install macOS Autotools
+      if: matrix.os == 'macos-latest' && matrix.example-test == 'Example-04-Autotools'
+      run: brew install automake autoconf libtool
+
+    - name: Configure Windows EMSDK install path
+      if: matrix.os == 'windows-latest'
+      run: npm config set emsdk "${GITHUB_WORKSPACE//\\//}/em sdk"
+
+    - name: Checkout test project
+      uses: actions/checkout@v2
+      with:
+        repository: devappd/emscripten-npm-examples
+        path: 'examples'
+
+    - name: Setup test build
+      run: |
+        cd "${{ github.workspace }}/examples/${{ matrix.example-test }}"
+        npm uninstall -D emscripten-build
+        npm install -D "git+https://github.com/${{ github.repository }}#${{ github.sha }}"
+        npm install
+    
+    - name: Clear target directory
+      uses: JesseTG/rm@v1.0.2
+      with:
+        path: ${{ github.workspace }}/examples/${{ matrix.example-test }}/dist
+
+    - name: Build test project
+      run: |
+        cd "${{ github.workspace }}/examples/${{ matrix.example-test }}"
+        mkdir ./dist
+        npm run build
+
+    - name: Check target directory for successful build
+      uses: actions/github-script@v3
+      with:
+        script: |
+          const targetPath = require('path').join(process.env.GITHUB_WORKSPACE, 'examples', '${{ matrix.example-test }}', 'dist');
+          if (!require('fs').readdirSync(targetPath).filter(fn => fn.endsWith('.js')).length)
+            throw new Error('JS build artifact was not found!');
+          if (!require('fs').readdirSync(targetPath).filter(fn => fn.endsWith('.wasm')).length)
+            throw new Error('WASM build artifact was not found!');
