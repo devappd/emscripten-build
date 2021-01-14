@@ -1,6 +1,6 @@
 {
   "name": "emscripten-build",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Configure and build a C/C++ emscripten project.",
   "main": "./dist/api.js",
   "scripts": {
@@ -22,6 +22,20 @@
     "url": "https://github.com/devappd/emscripten-build-npm/issues"
   },
   "homepage": "https://github.com/devappd/emscripten-build-npm#readme",
+  "keywords": [
+    "emscripten",
+    "cmake",
+    "ninja",
+    "webassembly",
+    "wasm",
+    "emsdk",
+    "sdk",
+    "build"
+  ],
+  "files": [
+    "docs/**/*",
+    "dist/**/*"
+  ],
   "dependencies": {
     "emscripten-sdk-npm": "git+https://github.com/devappd/emsdk-npm.git",
     "get-installed-path": "^4.0.8",
