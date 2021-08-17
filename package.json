@@ -37,7 +37,7 @@
     "dist/**/*"
   ],
   "dependencies": {
-    "emscripten-sdk-npm": "^0.3.0",
+    "emscripten-sdk-npm": "devappd/emscripten-sdk-npm#force-2.0.14",
     "get-installed-path": "^4.0.8",
     "lodash.mergewith": "^4.6.2",
     "resolve-path": "^1.4.0",
